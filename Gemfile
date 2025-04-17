@@ -47,7 +47,7 @@ gem "docker-api", "~> 2.4"
 gem "devise", "~> 4.9"
 
 # Environment variables
-gem "dotenv-rails", "~> 3.1.7"
+gem "dotenv-rails", "~> 3.1.8"
 
 # Pagination
 gem "kaminari"
