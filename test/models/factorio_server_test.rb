@@ -62,6 +62,36 @@ class FactorioServerTest < ActiveSupport::TestCase
     end
   end
 
+  # --- Configurable Docker image repository ---
+
+  test "image_repository defaults to factoriotools" do
+    assert_equal "factoriotools/factorio", FactorioServer.image_repository
+  end
+
+  test "image_repository reflects the site setting" do
+    SiteSetting.set("factorio_image_repository", "ghcr.io/owner/factorio")
+    assert_equal "ghcr.io/owner/factorio", FactorioServer.image_repository
+  end
+
+  test "image_reference combines repository and tag" do
+    assert_equal "factoriotools/factorio:latest", @server.image_reference("latest")
+    @server.version = "2.0.55"
+    assert_equal "factoriotools/factorio:2.0.55", @server.image_reference
+  end
+
+  test "normalize_image_repository cleans input" do
+    assert_equal "factoriotools/factorio", FactorioServer.normalize_image_repository("  ")
+    assert_equal "factoriotools/factorio", FactorioServer.normalize_image_repository("factoriotools/factorio:latest")
+    assert_equal "registry.example.com:5000/owner/factorio",
+                 FactorioServer.normalize_image_repository("registry.example.com:5000/owner/factorio:1.2.3")
+  end
+
+  test "docker_hub_repository is nil for custom registries" do
+    assert_equal "factoriotools/factorio", FactorioServer.docker_hub_repository
+    SiteSetting.set("factorio_image_repository", "ghcr.io/owner/factorio")
+    assert_nil FactorioServer.docker_hub_repository
+  end
+
   private
 
   def build_server(**attrs)

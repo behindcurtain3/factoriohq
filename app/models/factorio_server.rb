@@ -235,12 +235,53 @@ class FactorioServer < ApplicationRecord
     ]
   end
 
+  # The Docker image repository used to run game servers. Configurable by the
+  # site owner so a mirror or a drop-in-compatible fork can be used instead of
+  # the default factoriotools image. A custom image must accept the same env
+  # vars, mount /factorio, and use the same version tag scheme.
+  DEFAULT_IMAGE_REPOSITORY = "factoriotools/factorio".freeze
+
+  def self.image_repository
+    SiteSetting.get("factorio_image_repository").presence || DEFAULT_IMAGE_REPOSITORY
+  end
+
+  # Cleans owner-supplied input: blank -> default, and strips an accidental
+  # ":tag" from the image name (we always append the version ourselves).
+  def self.normalize_image_repository(value)
+    value = value.to_s.strip
+    return DEFAULT_IMAGE_REPOSITORY if value.blank?
+
+    segments = value.split("/")
+    segments[-1] = segments[-1].split(":").first if segments[-1].include?(":")
+    segments.join("/")
+  end
+
+  # Returns the Docker Hub "owner/name" when the repository lives on Docker Hub
+  # (so its tags can be listed via the Hub API), or nil for custom registries
+  # whose first path segment carries a host ("." or ":", e.g. ghcr.io).
+  def self.docker_hub_repository
+    repo = image_repository
+    first_segment = repo.split("/").first
+    return nil if first_segment&.match?(/[.:]/)
+
+    repo
+  end
+
+  def image_reference(tag = nil)
+    tag = tag.presence || version.presence || "latest"
+    "#{self.class.image_repository}:#{tag}"
+  end
+
   def self.available_versions
-    # Cache the versions for 1 hour
-    Rails.cache.fetch("factorio_versions", expires_in: 1.hour) do
+    # Cache the versions for 1 hour, keyed by repository so changing it refetches.
+    Rails.cache.fetch("factorio_versions/#{image_repository}", expires_in: 1.hour) do
+      repo = docker_hub_repository
+      # Custom registries can't be enumerated through the Docker Hub API.
+      next ["latest"] unless repo
+
       begin
         # Fetch tags from Docker Hub API
-        uri = URI("https://hub.docker.com/v2/repositories/factoriotools/factorio/tags?page_size=100")
+        uri = URI("https://hub.docker.com/v2/repositories/#{repo}/tags?page_size=100")
         response = Net::HTTP.get(uri)
         data = JSON.parse(response)
 
@@ -256,8 +297,8 @@ class FactorioServer < ApplicationRecord
           v.split('.').map(&:to_i)
         end.reverse
       rescue => e
-        # Fallback to hardcoded versions if API call fails
-        Rails.logger.error "Failed to fetch Factorio versions: #{e.message}"
+        # Fallback to a minimal list if the API call fails
+        Rails.logger.error "Failed to fetch Factorio versions for #{repo}: #{e.message}"
         [
           "latest"
         ]
@@ -270,7 +311,7 @@ class FactorioServer < ApplicationRecord
 
     begin
       # Pull the latest image
-      latest_image = Docker::Image.create('fromImage' => 'factoriotools/factorio:latest')
+      latest_image = Docker::Image.create('fromImage' => image_reference('latest'))
 
       # Get current image ID
       container = Docker::Container.get(docker_container_id)

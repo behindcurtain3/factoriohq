@@ -2,7 +2,7 @@
   <h1>Site Settings</h1>
 </div>
 
-<div class="card">
+<div class="card mb-4">
   <div class="card-header">
     <h5 class="mb-1">Registration</h5>
   </div>
@@ -11,6 +11,39 @@
       <div class="form-check mb-3">
         <%= f.check_box :registrations_enabled, checked: @registration_enabled, class: "form-check-input" %>
         <%= f.label :registrations_enabled, "Allow new user registrations", class: "form-check-label" %>
+      </div>
+      <%= f.submit "Save Settings", class: "btn btn-primary" %>
+    <% end %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-1">Factorio Docker Image</h5>
+  </div>
+  <div class="card-body">
+    <%= form_with url: admin_site_settings_path, method: :patch do |f| %>
+      <div class="mb-3">
+        <%= f.label :factorio_image_repository, "Image repository", class: "form-label" %>
+        <%= f.text_field :factorio_image_repository, value: @factorio_image_repository,
+              class: "form-control", placeholder: FactorioServer::DEFAULT_IMAGE_REPOSITORY,
+              spellcheck: false, autocapitalize: "off", autocomplete: "off" %>
+        <div class="form-text">
+          Repository used to pull and run game servers, <strong>without a tag</strong>
+          (the version is appended automatically). Default:
+          <code><%= FactorioServer::DEFAULT_IMAGE_REPOSITORY %></code>.
+          For a private registry include the host, e.g.
+          <code>ghcr.io/owner/factorio</code> or <code>registry.example.com:5000/owner/factorio</code>.
+        </div>
+        <div class="alert alert-warning mt-3 mb-0">
+          <i class="bi bi-exclamation-triangle"></i>
+          Only use an image that is <strong>drop-in compatible</strong> with
+          <code><%= FactorioServer::DEFAULT_IMAGE_REPOSITORY %></code>: it must accept the same
+          environment variables (RCON_PASSWORD, PORT, RCON_PORT, SAVE_NAME, DLC_SPACE_AGE, &hellip;),
+          mount its data at <code>/factorio</code>, and use the same version tag scheme.
+          The version list can only be auto-populated for Docker Hub repositories; for other
+          registries you'll set the version manually.
+        </div>
       </div>
       <%= f.submit "Save Settings", class: "btn btn-primary" %>
     <% end %>

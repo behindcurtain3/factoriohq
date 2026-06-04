@@ -61,14 +61,16 @@ class ServerOperationJob < ApplicationJob
     # Use specified version or default to latest
     version = server.version.present? ? server.version : 'latest'
 
+    image = server.image_reference(version)
+
     # Pull the image first to ensure it exists
     begin
-      Docker::Image.create('fromImage' => "factoriotools/factorio:#{version}")
+      Docker::Image.create('fromImage' => image)
     rescue => e
       server.update(status: 'error')
       server.server_logs.create(
         level: 'error',
-        message: "Failed to pull Docker image factoriotools/factorio:#{version}: #{e.message}. Make sure this version exists on Docker Hub.",
+        message: "Failed to pull Docker image #{image}: #{e.message}. Make sure this tag exists in the configured image repository.",
         timestamp: Time.current
       )
       return
@@ -77,7 +79,7 @@ class ServerOperationJob < ApplicationJob
     # Create Docker container
     container = Docker::Container.create(
       'name' => server.container_name,
-      'Image' => "factoriotools/factorio:#{version}",
+      'Image' => image,
       'Hostname' => "factorio-#{server.id}",
       'ExposedPorts' => {
         "#{server.port}/udp" => {},
