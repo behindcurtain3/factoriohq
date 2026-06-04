@@ -16,6 +16,12 @@ class ServerOperationJob < ApplicationJob
   private
 
   def start_server(server)
+    # Ensure the server's data directories exist before writing config and
+    # bind-mounting them, in case they have not been created yet.
+    FileUtils.mkdir_p(File.dirname(server.config_file_path))
+    FileUtils.mkdir_p(server.saves_directory)
+    FileUtils.mkdir_p(server.mods_directory)
+
     # Server settings
     File.write(server.config_file_path, server.server_settings.to_json)
 

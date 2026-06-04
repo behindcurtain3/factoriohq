@@ -84,9 +84,20 @@ class FactorioServer < ApplicationRecord
   after_create :update_mod_list
   after_update :update_mod_list
 
+  # Docker container names and on-disk data are namespaced by Rails environment.
+  # This keeps multiple instances that share a single Docker daemon and
+  # FACTORIO_DATA_PATH (e.g. running production and development side by side) from
+  # managing the same container or save directory. Production is left unprefixed
+  # for backwards compatibility with existing containers and data.
+  def self.namespace
+    Rails.env.production? ? nil : Rails.env.to_s
+  end
+
   # Instance methods
   def server_directory
-    "#{ENV['FACTORIO_DATA_PATH']}/servers/#{id}"
+    root = ENV['FACTORIO_DATA_PATH']
+    root = "#{root}/#{self.class.namespace}" if self.class.namespace
+    "#{root}/servers/#{id}"
   end
 
   def saves_directory
@@ -146,7 +157,8 @@ class FactorioServer < ApplicationRecord
   end
 
   def container_name
-    "factorio-server-#{id}"
+    ns = self.class.namespace
+    ns ? "factorio-#{ns}-server-#{id}" : "factorio-server-#{id}"
   end
 
   def server_settings

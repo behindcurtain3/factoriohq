@@ -23,5 +23,14 @@ module Factoriohq
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Allowed Host header values, supplied as a comma-separated list in the
+    # APP_HOSTS environment variable (e.g. "example.com,www.example.com").
+    # When unset, the per-environment host authorization defaults apply.
+    if ENV["APP_HOSTS"].present?
+      ENV["APP_HOSTS"].split(",").map(&:strip).reject(&:empty?).each do |host|
+        config.hosts << host
+      end
+    end
   end
 end
