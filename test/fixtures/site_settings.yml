@@ -1,9 +1,8 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# key has a unique index.
+registrations_enabled:
+  key: registrations_enabled
+  value: "true"
 
-one:
-  key: MyString
-  value: MyText
-
-two:
-  key: MyString
-  value: MyText
+site_title:
+  key: site_title
+  value: FactorioHQ

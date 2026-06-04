@@ -1,13 +1,11 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
   factorio_server: one
-  timestamp: 2025-04-04 21:21:56
-  message: MyText
-  log_hash: MyString
+  message: Player joined the game
+  log_hash: hash-one
+  timestamp: <%= 1.hour.ago.to_fs(:db) %>
 
 two:
-  factorio_server: two
-  timestamp: 2025-04-04 21:21:56
-  message: MyText
-  log_hash: MyString
+  factorio_server: one
+  message: Player left the game
+  log_hash: hash-two
+  timestamp: <%= 30.minutes.ago.to_fs(:db) %>

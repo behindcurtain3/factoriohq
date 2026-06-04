@@ -1,33 +1,28 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
+# name / port / rcon_port all have unique indexes, so keep them distinct.
 one:
-  name: MyString
-  description: MyText
-  port: 1
-  rcon_port: 1
-  rcon_password: MyString
-  max_players: 1
-  game_password: MyString
-  admin_password: MyString
+  name: Alpha Base
+  description: First test server
+  port: 34197
+  rcon_port: 27015
+  rcon_password: alpha-rcon
+  max_players: 0
+  game_password: alpha-pass
+  admin_password: alpha-admin
   auto_start: false
-  docker_container_id: MyString
-  status: MyString
-  version: MyString
-  save_file: MyString
+  status: stopped
+  version: latest
   user: one
 
 two:
-  name: MyString
-  description: MyText
-  port: 1
-  rcon_port: 1
-  rcon_password: MyString
-  max_players: 1
-  game_password: MyString
-  admin_password: MyString
+  name: Beta Base
+  description: Second test server
+  port: 34200
+  rcon_port: 27020
+  rcon_password: beta-rcon
+  max_players: 10
+  game_password: ""
+  admin_password: beta-admin
   auto_start: false
-  docker_container_id: MyString
-  status: MyString
-  version: MyString
-  save_file: MyString
+  status: running
+  version: "2.0.55"
   user: two

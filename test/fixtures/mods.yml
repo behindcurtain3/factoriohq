@@ -1,13 +1,13 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
-  name: MyString
-  version: MyString
-  file_name: MyString
-  enabled: false
+  factorio_server: one
+  name: space-exploration
+  version: 0.6.123
+  file_name: space-exploration_0.6.123.zip
+  enabled: true
 
 two:
-  name: MyString
-  version: MyString
-  file_name: MyString
+  factorio_server: one
+  name: krastorio2
+  version: 1.3.23
+  file_name: krastorio2_1.3.23.zip
   enabled: false
