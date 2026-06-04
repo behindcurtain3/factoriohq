@@ -125,6 +125,9 @@
     </div>
   </div>
 
+  <%# ---------- RCON console ---------- %>
+  <%= render 'console', server: @server %>
+
   <%# ---------- Notes ---------- %>
   <% if @server.description.present? %>
     <div class="card mb-4">

@@ -114,29 +114,31 @@ class FactorioServersController < ApplicationController
   end
 
   def console
-    if @server.running?
-      begin
-        rcon_server = SourceServer.new('127.0.0.1', @server.rcon_port)
-        begin
-          rcon_server.rcon_auth(@server.rcon_password)
-          puts rcon_server.rcon_exec(params[:command])
-        rescue RCONNoAuthError
-          render json: { success: false, error: 'RCON authentication failed' }, status: :unauthorized
-        end
-
-        # Create a log entry for the command
-        @server.server_logs.create(
-          level: 'info',
-          message: "RCON command executed: #{params[:command]}",
-          timestamp: Time.current
-        )
-
-        render json: { success: true, response: response }
-      rescue => e
-        render json: { success: false, error: e.message }, status: :internal_server_error
-      end
-    else
+    unless @server.running?
       render json: { success: false, error: "Server is not running" }, status: :bad_request
+      return
+    end
+
+    command = params[:command].to_s.strip
+    if command.blank?
+      render json: { success: false, error: "No command provided" }, status: :bad_request
+      return
+    end
+
+    begin
+      response = RconService.new("127.0.0.1", @server.rcon_port, @server.rcon_password).execute(command)
+
+      @server.server_logs.create(
+        level: "info",
+        message: "RCON command executed: #{command}",
+        timestamp: Time.current
+      )
+
+      render json: { success: true, response: response }
+    rescue RconService::RconError => e
+      render json: { success: false, error: e.message }, status: :unprocessable_entity
+    rescue => e
+      render json: { success: false, error: e.message }, status: :internal_server_error
     end
   end
 

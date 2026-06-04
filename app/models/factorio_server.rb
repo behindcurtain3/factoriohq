@@ -120,6 +120,13 @@ class FactorioServer < ApplicationRecord
     "#{server_directory}/config/server-adminlist.json"
   end
 
+  # The factoriotools image reads the RCON password from this file (and would
+  # otherwise generate a random one we don't know). Writing it lets us control
+  # the password so the app can authenticate to RCON.
+  def rconpw_path
+    "#{server_directory}/config/rconpw"
+  end
+
   # Factorio admin usernames parsed from the free-text field. Accepts commas,
   # whitespace, or newlines as separators.
   def admin_list

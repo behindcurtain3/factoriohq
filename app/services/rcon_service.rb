@@ -1,5 +1,9 @@
-require 'socket'
+require "socket"
 
+# Minimal Valve Source RCON client. Factorio speaks this protocol on its
+# --rcon-port. Packets are little-endian and framed as:
+#   [int32 size][int32 id][int32 type][body bytes][0x00][0x00]
+# where `size` counts everything after itself (id + type + body + 2 nulls).
 class RconService
   class RconError < StandardError; end
 
@@ -8,183 +12,119 @@ class RconService
   SERVERDATA_EXECCOMMAND = 2
   SERVERDATA_RESPONSE_VALUE = 0
 
-  def initialize(host, port, password)
+  def initialize(host, port, password, timeout: 5)
     @host = host
     @port = port
     @password = password
-    @socket = nil
+    @timeout = timeout
     @request_id = 0
   end
 
+  # Connect, authenticate, run a single command, and return its response body.
+  # Raises RconError on any failure (connection, auth, or timeout).
+  def execute(command)
+    connect
+    authenticate
+    run(command)
+  ensure
+    disconnect
+  end
+
   def connect
-    begin
-      Rails.logger.info "Connecting to RCON at #{@host}:#{@port}"
-      @socket = TCPSocket.new(@host, @port)
-      Rails.logger.info "Connected to RCON server, attempting authorization"
-      authorize
-      Rails.logger.info "RCON authorization successful"
-      self
-    rescue => e
-      Rails.logger.error "RCON connection error: #{e.message}"
-      raise RconError, "Failed to connect to RCON server: #{e.message}"
-    end
+    @socket = Socket.tcp(@host, @port, connect_timeout: @timeout)
+  rescue => e
+    raise RconError, "Could not connect to #{@host}:#{@port} (#{e.message})"
   end
 
   def disconnect
     @socket&.close
+  rescue IOError
+    # already closed
+  ensure
     @socket = nil
   end
 
-  def send_command(command)
-    raise RconError, "Not connected" unless @socket
-    Rails.logger.info "Sending command to RCON: #{command}"
-
-    begin
-      Rails.logger.debug "Setting socket options..."
-      @socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_RCVTIMEO, [5, 0].pack('l_*'))
-
-      request_id = next_request_id
-      Rails.logger.debug "Sending command packet with ID: #{request_id}"
-      send_packet(SERVERDATA_EXECCOMMAND, command)
-
-      # Read the response packets
-      response_text = ""
-
-      # First packet (command response)
-      Rails.logger.debug "Reading first response packet..."
-      response1 = read_packet
-
-      if !response1
-        Rails.logger.error "No response received"
-        raise RconError, "No response received"
-      elsif response1[:id] != request_id
-        Rails.logger.error "Response ID mismatch: expected #{request_id}, got #{response1[:id]}"
-        raise RconError, "Response ID mismatch"
-      end
-
-      response_text = response1[:body]
-      Rails.logger.debug "First response: #{response_text}"
-
-      # Second packet (empty terminator)
-      Rails.logger.debug "Reading second (terminator) packet..."
-      response2 = read_packet
-
-      if response2
-        Rails.logger.debug "Second response: #{response2[:body]}"
-        # Some servers might include additional data in the second packet
-        if response2[:body] && !response2[:body].empty?
-          response_text += response2[:body]
-        end
-      end
-
-      return response_text
-    rescue => e
-      Rails.logger.error "RCON command error: #{e.message}"
-      disconnect
-      raise RconError, "RCON command failed: #{e.message}"
+  def authenticate
+    request_id = send_packet(SERVERDATA_AUTH, @password)
+    packet = read_auth_response
+    if packet.nil? || packet[:id] == -1 || packet[:id] != request_id
+      raise RconError, "Authentication failed (is the RCON password correct?)"
     end
+  end
+
+  def run(command)
+    send_packet(SERVERDATA_EXECCOMMAND, command)
+    packet = read_packet
+    raise RconError, "No response received from server" unless packet
+
+    packet[:body]
   end
 
   private
 
-  def authorize
-    send_packet(SERVERDATA_AUTH, @password)
-
-    # Set a timeout for the auth response
-    @socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_RCVTIMEO, [5, 0].pack('l_*'))
-
-    response = read_packet
-
-    if !response || response[:id] == -1
-      disconnect
-      raise RconError, "Authentication failed"
+  # A server may emit an empty RESPONSE_VALUE before the AUTH_RESPONSE, so read
+  # a couple of packets looking for the auth response.
+  def read_auth_response
+    2.times do
+      packet = read_packet
+      return packet if packet.nil? || packet[:type] == SERVERDATA_AUTH_RESPONSE
     end
-  end
-
-  def send_packet(type, body)
-    packet = build_packet(type, body)
-
-    bytes_sent = 0
-
-    # Send packet with timeout
-    begin
-      @socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_SNDTIMEO, [5, 0].pack('l_*'))
-      bytes_sent = @socket.write(packet)
-    rescue => e
-      raise RconError, "Send error: #{e.message}"
-    end
-
-    if bytes_sent != packet.bytesize
-      raise RconError, "Failed to send complete packet"
-    end
-  end
-
-  def build_packet(type, body)
-    request_id = next_request_id
-    # Size is the length of the packet content (not including the size field itself)
-    # 4 bytes for request_id + 4 bytes for type + body length + 2 null terminators
-    size = 4 + 4 + body.bytesize + 2
-
-    [size, request_id, type, body, "\x00\x00"].pack("VVVa*a*")
-  end
-
-  def read_packet
-    begin
-      Rails.logger.debug "Reading packet header..."
-
-      response = read_rcon_response(@socket)
-
-      if !response[:body]
-        Rails.logger.debug "Failed to read packet body"
-        return nil
-      end
-
-      # Extract string up to the first null byte
-      body_str = response[:body].unpack("Z*")[0] || ""
-      Rails.logger.debug "Packet body: #{body_str.inspect}"
-
-      return { id: response[:id], type: response[:type], body: body_str }
-    rescue Timeout::Error => e
-      Rails.logger.error "Timeout reading packet: #{e.message}"
-      raise RconError, "Timeout reading packet: #{e.message}"
-    rescue => e
-      Rails.logger.error "RCON read error: #{e.message}"
-      raise RconError, "Read error: #{e.message}"
-    end
+    nil
   end
 
   def next_request_id
     @request_id += 1
   end
 
-  def read_rcon_response(socket)
-    # Read the full response from socket
-    response = ""
-    while line = socket.gets
-      response << line
+  # Returns the request id used, so the caller can match the response.
+  def send_packet(type, body)
+    id = next_request_id
+    payload = [ id, type ].pack("VV") + body.to_s.b + "\x00\x00".b
+    write_all([ payload.bytesize ].pack("V") + payload)
+    id
+  end
+
+  def write_all(data)
+    offset = 0
+    while offset < data.bytesize
+      raise RconError, "Timed out sending data" unless IO.select(nil, [ @socket ], nil, @timeout)
+
+      written = @socket.write_nonblock(data.byteslice(offset..-1), exception: false)
+      offset += written if written.is_a?(Integer)
     end
+  rescue RconError
+    raise
+  rescue => e
+    raise RconError, "Send error: #{e.message}"
+  end
 
-    return nil if response.empty?
+  def read_packet
+    header = read_exactly(4)
+    return nil unless header
 
-    # Parse the response as RCON packet
-    # First 4 bytes are size
-    size = response.byteslice(0, 4).unpack('V')[0]
+    size = header.unpack1("V")
+    return nil if size < 10 || size > 8192 # 10 = id + type + 2 nulls; sanity bound
 
-    # Extract and parse the packet
-    packet = response.byteslice(4, size)
-    return nil if packet.nil? || packet.empty?
+    payload = read_exactly(size)
+    return nil unless payload
 
-    # Unpack the packet components
-    request_id, type, body_with_null = packet.unpack('VVa*')
+    id, type = payload.unpack("VV")
+    body = payload.byteslice(8, size - 10).to_s.force_encoding("UTF-8")
+    { id: id, type: type, body: body }
+  end
 
-    # Extract body (removing the null terminator)
-    body = body_with_null.chomp("\x00")
+  def read_exactly(count)
+    buffer = +"".b
+    while buffer.bytesize < count
+      raise RconError, "Timed out reading from server" unless IO.select([ @socket ], nil, nil, @timeout)
 
-    # Return all three components
-    return {
-      id: request_id,
-      type: type,
-      body: body
-    }
+      chunk = @socket.read_nonblock(count - buffer.bytesize, exception: false)
+      case chunk
+      when :wait_readable then next
+      when nil then return nil # EOF / connection closed
+      else buffer << chunk
+      end
+    end
+    buffer
   end
 end

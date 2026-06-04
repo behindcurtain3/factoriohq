@@ -29,10 +29,13 @@ class ServerOperationJob < ApplicationJob
     # so removing an admin takes effect on the next start.
     File.write(server.admin_list_path, server.admin_list.to_json)
 
+    # RCON password. The factoriotools image reads this from config/rconpw and
+    # ignores any RCON_PASSWORD env var, so we must write the file ourselves for
+    # the app to be able to authenticate. Always overwrite so it stays in sync.
+    File.write(server.rconpw_path, server.rcon_password)
+
     # Prepare environment variables
-    env_vars = [
-      "RCON_PASSWORD=#{server.rcon_password}"
-    ]
+    env_vars = []
 
     # Only add SAVE_NAME if a save file is specified
     if server.save_file.present?
