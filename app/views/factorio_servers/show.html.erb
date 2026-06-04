@@ -108,6 +108,17 @@
                 <span class="text-muted"><em>None</em></span>
               <% end %>
             </dd>
+
+            <dt>Admins</dt>
+            <dd>
+              <% if @server.admin_list.any? %>
+                <% @server.admin_list.each do |admin| %>
+                  <span class="badge bg-secondary me-1"><%= admin %></span>
+                <% end %>
+              <% else %>
+                <span class="text-muted"><em>None</em></span>
+              <% end %>
+            </dd>
           </dl>
         </div>
       </div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_16_211301) do
+ActiveRecord::Schema[8.0].define(version: 2026_06_04_202759) do
   create_table "factorio_servers", force: :cascade do |t|
     t.string "name"
     t.text "description"
@@ -54,6 +54,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_16_211301) do
     t.boolean "enable_quality", default: true
     t.boolean "enable_space_age", default: true
     t.boolean "auto_update_mods", default: false
+    t.text "admin_usernames"
     t.index ["name"], name: "index_factorio_servers_on_name", unique: true
     t.index ["port"], name: "index_factorio_servers_on_port", unique: true
     t.index ["rcon_port"], name: "index_factorio_servers_on_rcon_port", unique: true

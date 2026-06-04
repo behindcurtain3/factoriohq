@@ -116,6 +116,16 @@ class FactorioServer < ApplicationRecord
     "#{mods_directory}/mod-list.json"
   end
 
+  def admin_list_path
+    "#{server_directory}/config/server-adminlist.json"
+  end
+
+  # Factorio admin usernames parsed from the free-text field. Accepts commas,
+  # whitespace, or newlines as separators.
+  def admin_list
+    admin_usernames.to_s.split(/[\s,]+/).map(&:strip).reject(&:blank?).uniq
+  end
+
   def start
     return false if running?
 

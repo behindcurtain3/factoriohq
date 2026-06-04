@@ -159,7 +159,7 @@ class FactorioServersController < ApplicationController
       :minimum_segment_size, :minimum_segment_size_peer_count,
       :maximum_segment_size, :maximum_segment_size_peer_count,
       :token, :tags, :enable_elevated_rails, :enable_quality, :enable_space_age,
-      :auto_update_mods
+      :auto_update_mods, :admin_usernames
     )
   end
 

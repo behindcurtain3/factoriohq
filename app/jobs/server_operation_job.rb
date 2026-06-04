@@ -25,6 +25,10 @@ class ServerOperationJob < ApplicationJob
     # Server settings
     File.write(server.config_file_path, server.server_settings.to_json)
 
+    # Admin list (Factorio reads config/server-adminlist.json). Always written
+    # so removing an admin takes effect on the next start.
+    File.write(server.admin_list_path, server.admin_list.to_json)
+
     # Prepare environment variables
     env_vars = [
       "RCON_PASSWORD=#{server.rcon_password}"

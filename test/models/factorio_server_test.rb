@@ -92,6 +92,22 @@ class FactorioServerTest < ActiveSupport::TestCase
     assert_nil FactorioServer.docker_hub_repository
   end
 
+  # --- Server admins ---
+
+  test "admin_list parses usernames separated by commas, spaces, or newlines" do
+    server = build_server(admin_usernames: "Alice, bob\n charlie\tAlice")
+    assert_equal %w[Alice bob charlie], server.admin_list
+  end
+
+  test "admin_list is empty when unset" do
+    assert_equal [], build_server(admin_usernames: nil).admin_list
+    assert_equal [], build_server(admin_usernames: "   ").admin_list
+  end
+
+  test "admin_list_path lives in the server config dir" do
+    assert @server.admin_list_path.end_with?("/config/server-adminlist.json")
+  end
+
   private
 
   def build_server(**attrs)
