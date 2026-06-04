@@ -1,4 +1,4 @@
-<div class="d-flex flex-wrap gap-2" id="server-actions">
+<div class="d-flex flex-wrap gap-2 align-items-center" id="server-actions">
   <% if server.running? %>
     <%= button_to stop_factorio_server_path(server),
                  class: "btn btn-danger",
@@ -7,7 +7,7 @@
       <% if server.status == 'stopping' %>
         <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
       <% else %>
-        <i class="bi bi-stop"></i>
+        <i class="bi bi-stop-fill"></i>
       <% end %>
       Stop Server
     <% end %>
@@ -19,30 +19,36 @@
       <% if server.status == 'starting' %>
         <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
       <% else %>
-        <i class="bi bi-play"></i>
+        <i class="bi bi-play-fill"></i>
       <% end %>
       Start Server
     <% end %>
   <% end %>
 
   <% if server.stopped? %>
-    <%= link_to "Edit Settings", edit_factorio_server_path(@server), class: "btn btn-warning" %>
+    <%= link_to factorio_server_server_mods_path(@server), class: 'btn btn-info' do %>
+      <i class="bi bi-puzzle"></i> Manage Mods
+    <% end %>
+    <%= link_to factorio_server_save_files_path(@server), class: 'btn btn-info' do %>
+      <i class="bi bi-archive"></i> Manage Saves
+    <% end %>
+    <%= link_to edit_factorio_server_path(@server), class: "btn btn-warning" do %>
+      <i class="bi bi-pencil-square"></i> Edit Settings
+    <% end %>
+    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#versionModal">
+      <i class="bi bi-box-seam"></i> Change Version
+    </button>
   <% end %>
+
   <% if server.version == 'latest' || server.version.blank? %>
     <%= link_to check_updates_factorio_server_path(server), class: "btn btn-info" do %>
-      Check for Updates
+      <i class="bi bi-cloud-arrow-down"></i> Check for Updates
     <% end %>
-  <% end %>
-  <% if server.stopped? %>
-    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#versionModal">
-      Change Version
-    </button>
-    <%= link_to 'Manage Save Files', factorio_server_save_files_path(@server), class: 'btn btn-info' %>
-    <%= link_to 'Manage Mods', factorio_server_server_mods_path(@server), class: 'btn btn-info' %>
   <% end %>
 
   <%= button_to factorio_server_path(server),
                method: :delete,
+               form_class: "ms-auto",
                data: { confirm: "Are you sure you want to delete this server?" },
                class: "btn btn-danger",
                disabled: server.status == 'starting' || server.status == 'stopping' do %>

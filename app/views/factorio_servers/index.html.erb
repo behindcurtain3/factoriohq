@@ -18,37 +18,49 @@
 <% else %>
   <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     <% @servers.each do |server| %>
+      <% connect_address = "#{request.host}:#{server.port}" %>
       <div class="col">
-        <div class="card h-100">
-          <div class="card-header">
-            <h5 class="mb-1"><%= server.name %></h5>
+        <div class="card server-card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <%= link_to server.name, factorio_server_path(server), class: "server-card-title text-truncate" %>
+            <span class="badge <%= server.running? ? 'bg-success' : 'bg-secondary' %>">
+              <%= server.status.capitalize %>
+            </span>
           </div>
-          <div class="card-body">
-            <div class="mb-3">
-              <span class="badge <%= server.running? ? 'bg-success' : 'bg-secondary' %>">
-                <%= server.status.capitalize %>
-              </span>
-              <span class="ms-2 text-muted small">Port: <%= server.port %></span>
-              <% if server.mods.any? %>
-                <span class="ms-2 text-muted small">Mods: <%= server.mods.count %></span>
-              <% end %>
+          <div class="card-body d-flex flex-column">
+            <div class="mb-3" data-controller="clipboard" data-clipboard-text-value="<%= connect_address %>">
+              <label class="connect-label">Connect Address</label>
+              <div class="connect-field">
+                <code class="connect-addr"><%= connect_address %></code>
+                <button type="button" class="btn btn-sm btn-outline-primary connect-copy"
+                        data-clipboard-target="button" data-action="clipboard#copy"
+                        title="Copy address to clipboard" aria-label="Copy address">
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
             </div>
 
-            <p class="card-text text-truncate mb-4"><%= server.description %></p>
+            <% if server.description.present? %>
+              <p class="card-text text-truncate text-muted mb-0"><%= server.description %></p>
+            <% end %>
+          </div>
 
-            <div class="d-flex justify-content-between">
-              <%= link_to "Details", factorio_server_path(server), class: "btn btn-sm btn-outline-primary" %>
-              <div>
-                <% if server.running? %>
-                  <%= button_to stop_factorio_server_path(server), class: "btn btn-sm btn-danger" do %>
-                    <i class="bi bi-stop"></i> Stop
-                  <% end %>
-                <% else %>
-                  <%= button_to start_factorio_server_path(server), class: "btn btn-sm btn-success" do %>
-                    <i class="bi bi-play"></i> Start
-                  <% end %>
-                <% end %>
-              </div>
+          <div class="card-footer">
+            <div class="server-meta">
+              <% if server.game_password.present? %>
+                <span class="server-pw me-auto" title="Hover to reveal &middot; click to copy"
+                      data-controller="clipboard" data-clipboard-text-value="<%= server.game_password %>"
+                      data-action="click->clipboard#copy">
+                  <i class="bi bi-lock-fill pw-icon-locked"></i>
+                  <i class="bi bi-unlock-fill pw-icon-unlocked"></i>
+                  <span class="pw-label">Locked</span>
+                  <span class="pw-value" data-clipboard-target="button"><%= server.game_password %></span>
+                </span>
+              <% end %>
+              <% if server.mods.any? %>
+                <span title="Installed mods"><i class="bi bi-puzzle"></i><%= server.mods.count %> mods</span>
+              <% end %>
+              <span title="Factorio version"><i class="bi bi-tag"></i><%= server.version.presence || "latest" %></span>
             </div>
           </div>
         </div>

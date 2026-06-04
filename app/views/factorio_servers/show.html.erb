@@ -1,136 +1,187 @@
 <%= turbo_stream_from @server %>
+<% connect_address = "#{request.host}:#{@server.port}" %>
+<% rcon_address = "#{request.host}:#{@server.rcon_port}" %>
 <div id="factorio-server-show" data-server-id="<%= @server.id %>">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="d-flex align-items-center">
-      <h1 class="me-3"><%= @server.name %></h1>
+  <%# ---------- Header ---------- %>
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-3">
+      <h1 class="mb-0"><%= @server.name %></h1>
       <div id="status-badge-container">
         <%= render 'status_badge', server: @server %>
       </div>
     </div>
+    <%= link_to factorio_servers_path, class: "btn btn-outline-secondary" do %>
+      <i class="bi bi-arrow-left"></i> Back
+    <% end %>
+  </div>
 
-    <div class="btn-group">
-      <%= link_to "Back", factorio_servers_path, class: "btn btn-outline-secondary" %>
+  <%# ---------- Controls ---------- %>
+  <div class="card mb-4">
+    <div class="card-header"><h5 class="mb-0">Controls</h5></div>
+    <div class="card-body">
+      <div id="server-actions-container">
+        <%= render 'server_actions', server: @server %>
+      </div>
     </div>
   </div>
 
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5 class="mb-1">Server Details</h5>
-    </div>
-    <div class="card-body">
-      <% if @server.description.present? %>
-        <p class="card-text"><pre><%= @server.description %></pre></p>
-        <hr>
-      <% end %>
+  <%# ---------- Connection + Overview ---------- %>
+  <div class="row g-4 mb-4">
+    <div class="col-lg-7">
+      <div class="card h-100">
+        <div class="card-header"><h5 class="mb-0">Connection</h5></div>
+        <div class="card-body">
+          <div class="mb-3" data-controller="clipboard" data-clipboard-text-value="<%= connect_address %>">
+            <label class="connect-label">Game Address</label>
+            <div class="connect-field">
+              <code class="connect-addr"><%= connect_address %></code>
+              <button type="button" class="btn btn-sm btn-outline-primary connect-copy"
+                      data-clipboard-target="button" data-action="clipboard#copy"
+                      title="Copy address" aria-label="Copy game address">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+          </div>
 
-      <div class="row mb-4">
-        <div class="col-md-6">
-          <h6 class="text-muted">Connection Info</h6>
-          <dl class="row">
-            <dt class="col-sm-4">Port</dt>
-            <dd class="col-sm-8"><%= @server.port %></dd>
+          <div class="mb-3" data-controller="clipboard" data-clipboard-text-value="<%= rcon_address %>">
+            <label class="connect-label">RCON Address</label>
+            <div class="connect-field">
+              <code class="connect-addr"><%= rcon_address %></code>
+              <button type="button" class="btn btn-sm btn-outline-primary connect-copy"
+                      data-clipboard-target="button" data-action="clipboard#copy"
+                      title="Copy RCON address" aria-label="Copy RCON address">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+          </div>
 
-            <dt class="col-sm-4">RCON Port</dt>
-            <dd class="col-sm-8"><%= @server.rcon_port %></dd>
-
-            <dt class="col-sm-4">Game Password</dt>
-            <dd class="col-sm-8">
-              <% if @server.game_password.present? %>
-                <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="toggle-password">
+          <div class="mb-0">
+            <label class="connect-label">Game Password</label>
+            <% if @server.game_password.present? %>
+              <div class="connect-field" data-controller="clipboard" data-clipboard-text-value="<%= @server.game_password %>">
+                <code class="connect-addr" id="password-display" data-shown="false">••••••••</code>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-password"
+                        title="Show / hide password" aria-label="Show or hide password">
                   <i class="bi bi-eye"></i>
                 </button>
-                <span id="password-display">••••••••</span>
-              <% else %>
-                <em>None</em>
-              <% end %>
-            </dd>
-          </dl>
-        </div>
-
-        <div class="col-md-6">
-          <h6 class="text-muted">Settings</h6>
-          <dl class="row">
-            <dt class="col-sm-4">Max Players</dt>
-            <dd class="col-sm-8"><%= @server.max_players.zero? ? 'Unlimited' : @server.max_players %></dd>
-
-            <dt class="col-sm-4">Version</dt>
-            <dd class="col-sm-8"><%= @server.version.presence || 'latest' %></dd>
-
-            <dt class="col-sm-4">Tags</dt>
-            <dd class="col-sm-8">
-            <% if @server.tags.present? %>
-              <% @server.tags.split.each do |tag| %>
-                <span class="badge bg-secondary me-1"><%= tag %></span>
-              <% end %>
+                <button type="button" class="btn btn-sm btn-outline-primary connect-copy"
+                        data-clipboard-target="button" data-action="clipboard#copy"
+                        title="Copy password" aria-label="Copy password">
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
             <% else %>
-              <em>No tags set</em>
+              <p class="text-muted mb-0"><em>No password set &mdash; anyone can join.</em></p>
             <% end %>
-            </dd>
+          </div>
+        </div>
+      </div>
+    </div>
 
-            <dt class="col-sm-4">Mods</dt>
-            <dd class="col-sm-8"><%= @server.mods.where(enabled: true).count %></dd>
+    <div class="col-lg-5">
+      <div class="card h-100">
+        <div class="card-header"><h5 class="mb-0">Overview</h5></div>
+        <div class="card-body">
+          <dl class="detail-list mb-0">
+            <dt>Version</dt>
+            <dd><%= @server.version.presence || 'latest' %></dd>
+
+            <dt>Max Players</dt>
+            <dd><%= @server.max_players.zero? ? 'Unlimited' : @server.max_players %></dd>
+
+            <dt>Enabled Mods</dt>
+            <dd><%= @server.mods.where(enabled: true).count %></dd>
+
+            <dt>Game Port</dt>
+            <dd><%= @server.port %></dd>
+
+            <dt>RCON Port</dt>
+            <dd><%= @server.rcon_port %></dd>
+
+            <dt>Tags</dt>
+            <dd>
+              <% if @server.tags.present? %>
+                <% @server.tags.split.each do |tag| %>
+                  <span class="badge bg-secondary me-1"><%= tag %></span>
+                <% end %>
+              <% else %>
+                <span class="text-muted"><em>None</em></span>
+              <% end %>
+            </dd>
           </dl>
         </div>
       </div>
     </div>
-    <div class="card-footer d-flex justify-content-center">
-          <div id="server-actions-container">
-            <%= render 'server_actions', server: @server %>
+  </div>
+
+  <%# ---------- Notes ---------- %>
+  <% if @server.description.present? %>
+    <div class="card mb-4">
+      <div class="card-header"><h5 class="mb-0">Notes</h5></div>
+      <div class="card-body">
+        <pre class="server-notes mb-0"><%= @server.description %></pre>
+      </div>
+    </div>
+  <% end %>
+
+  <%# ---------- Logs (tabbed) ---------- %>
+  <div class="card mb-4">
+    <div class="card-header">
+      <ul class="nav nav-tabs card-header-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="server-logs-tab" data-bs-toggle="tab"
+                  data-bs-target="#tab-server-logs" type="button" role="tab">Server Logs</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="game-logs-tab" data-bs-toggle="tab"
+                  data-bs-target="#tab-game-logs" type="button" role="tab">Game Logs</button>
+        </li>
+      </ul>
+    </div>
+    <div class="card-body">
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="tab-server-logs" role="tabpanel">
+          <div class="log-scroll log-terminal">
+            <table class="table table-striped table-sm mb-0">
+              <thead><tr><th>Time</th><th>Level</th><th>Message</th></tr></thead>
+              <tbody id="server-logs">
+                <% @server.server_logs.order(timestamp: :desc).limit(10).each do |log| %>
+                  <%= render 'server_logs/log_entry', log: log %>
+                <% end %>
+              </tbody>
+            </table>
+            <% if @server.server_logs.empty? %>
+              <p class="text-muted text-center my-3 mb-0">No server logs yet.</p>
+            <% end %>
           </div>
-    </div>
-  </div>
+          <div class="d-flex justify-content-end mt-3">
+            <%= link_to "View All", factorio_server_server_logs_path(@server), class: "btn btn-sm btn-outline-primary" %>
+          </div>
+        </div>
 
-  <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-1">Recent Server Logs</h5>
-      <%= link_to "View All Logs", factorio_server_server_logs_path(@server), class: "btn btn-sm btn-outline-primary" %>
-    </div>
-
-    <div class="card-body">
-      <div style="max-height: 300px; overflow-y: auto;">
-        <table class="table table-striped table-sm">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Level</th>
-              <th>Message</th>
-            </tr>
-          </thead>
-          <tbody id="server-logs">
-            <% @server.server_logs.order(timestamp: :desc).limit(10).each do |log| %>
-              <%= render 'server_logs/log_entry', log: log %>
+        <div class="tab-pane fade" id="tab-game-logs" role="tabpanel">
+          <div class="log-scroll log-terminal">
+            <table class="table table-striped table-sm mb-0">
+              <thead><tr><th>Time</th><th>Message</th></tr></thead>
+              <tbody id="game-logs">
+                <% @server.game_logs.limit(10).each do |log| %>
+                  <%= render 'game_logs/log_entry', log: log %>
+                <% end %>
+              </tbody>
+            </table>
+            <% if @server.game_logs.empty? %>
+              <p class="text-muted text-center my-3 mb-0">No game logs yet.</p>
             <% end %>
-          </tbody>
-        </table>
+          </div>
+          <div class="d-flex justify-content-end mt-3">
+            <%= link_to "View All", factorio_server_game_logs_path(@server), class: "btn btn-sm btn-outline-primary" %>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-1">Game Logs</h5>
-      <%= link_to "View All Logs", factorio_server_game_logs_path(@server), class: "btn btn-sm btn-outline-primary" %>
-    </div>
-
-    <div class="card-body">
-      <div style="max-height: 300px; overflow-y: auto;">
-        <table class="table table-striped table-sm">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Message</th>
-            </tr>
-          </thead>
-          <tbody id="game-logs">
-            <% @server.game_logs.limit(10).each do |log| %>
-              <%= render 'game_logs/log_entry', log: log %>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
+  <%# ---------- Change-version modal ---------- %>
   <div class="modal fade" id="versionModal" tabindex="-1" aria-labelledby="versionModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -170,23 +221,19 @@
       const toggleBtn = document.getElementById('toggle-password');
       const passwordDisplay = document.getElementById('password-display');
 
-      if (toggleBtn) {
+      if (toggleBtn && passwordDisplay) {
         toggleBtn.addEventListener('click', function() {
-          const passwordShown = toggleBtn.getAttribute('data-shown') === 'true';
+          const shown = passwordDisplay.getAttribute('data-shown') === 'true';
           const icon = toggleBtn.querySelector('i');
 
-          if (passwordShown) {
-            // Hide password
+          if (shown) {
             passwordDisplay.textContent = '••••••••';
-            icon.classList.remove('bi-eye-slash');
-            icon.classList.add('bi-eye');
-            toggleBtn.setAttribute('data-shown', 'false');
+            icon.classList.replace('bi-eye-slash', 'bi-eye');
+            passwordDisplay.setAttribute('data-shown', 'false');
           } else {
-            // Show password
-            passwordDisplay.textContent = '<%= @server.game_password %>';
-            icon.classList.remove('bi-eye');
-            icon.classList.add('bi-eye-slash');
-            toggleBtn.setAttribute('data-shown', 'true');
+            passwordDisplay.textContent = '<%= j @server.game_password %>';
+            icon.classList.replace('bi-eye', 'bi-eye-slash');
+            passwordDisplay.setAttribute('data-shown', 'true');
           }
         });
       }
