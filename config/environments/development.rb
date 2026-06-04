@@ -9,6 +9,12 @@ Rails.application.configure do
   # Do not eager load code on boot.
   config.eager_load = false
 
+  # Always serve assets from source in development so CSS/JS edits show up on
+  # reload. Pointing the Propshaft manifest at a path that never exists forces
+  # the dynamic resolver even when a precompiled public/assets manifest is
+  # present (e.g. one built for a production instance sharing this checkout).
+  config.assets.manifest_path = Rails.root.join("tmp", "propshaft-development-no-manifest.json")
+
   # Show full error reports.
   config.consider_all_requests_local = true
 
