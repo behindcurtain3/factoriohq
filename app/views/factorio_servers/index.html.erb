@@ -1,4 +1,5 @@
-<%= turbo_stream_from @servers %>
+<%= turbo_stream_from "factorio_servers" %>
+<% @servers.each do |server| %><%= turbo_stream_from server %><% end %>
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h1>Your Factorio Servers</h1>
   <%= link_to new_factorio_server_path, class: "btn btn-primary" do %>
