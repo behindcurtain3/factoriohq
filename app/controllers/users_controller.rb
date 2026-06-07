@@ -7,9 +7,9 @@ class UsersController < ApplicationController
 
   def update
     if current_user.update(user_params)
-      redirect_to edit_user_path, notice: 'Settings updated successfully.'
+      redirect_to edit_user_path, notice: "Settings updated successfully."
     else
-      flash.now[:alert] = 'Failed to update settings.'
+      flash.now[:alert] = "Failed to update settings."
       render :edit
     end
   end
@@ -17,9 +17,9 @@ class UsersController < ApplicationController
   def update_password
     if current_user.update_with_password(password_params)
       bypass_sign_in(current_user)
-      redirect_to edit_user_path, notice: 'Password changed successfully.'
+      redirect_to edit_user_path, notice: "Password changed successfully."
     else
-      flash.now[:alert] = 'Failed to change password.'
+      flash.now[:alert] = "Failed to change password."
       render :edit
     end
   end

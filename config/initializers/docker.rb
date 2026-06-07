@@ -1,7 +1,7 @@
-require 'docker'
+require "docker"
 
 # Configure Docker API
-Docker.url = ENV['DOCKER_URL'] || 'unix:///var/run/docker.sock'
+Docker.url = ENV["DOCKER_URL"] || "unix:///var/run/docker.sock"
 
 # Test Docker connection on startup
 begin

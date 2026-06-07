@@ -1,7 +1,7 @@
 class FactorioServersController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_server, only: [:show, :edit, :update, :destroy, :start, :stop, :restart, :console, :update_version]
-  before_action :ensure_server_not_running, only: [:edit, :update, :destroy, :update_version]
+  before_action :set_server, only: [ :show, :edit, :update, :destroy, :start, :stop, :restart, :console, :update_version ]
+  before_action :ensure_server_not_running, only: [ :edit, :update, :destroy, :update_version ]
 
   def index
     @servers = current_user.factorio_servers
@@ -18,7 +18,7 @@ class FactorioServersController < ApplicationController
     @server = current_user.factorio_servers.build(server_params)
 
     if @server.save
-      redirect_to @server, notice: 'Factorio server was successfully created.'
+      redirect_to @server, notice: "Factorio server was successfully created."
     else
       render :new, status: :unprocessable_entity
     end
@@ -29,7 +29,7 @@ class FactorioServersController < ApplicationController
 
   def update
     if @server.update(server_params)
-      redirect_to @server, notice: 'Factorio server was successfully updated.'
+      redirect_to @server, notice: "Factorio server was successfully updated."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -38,7 +38,7 @@ class FactorioServersController < ApplicationController
   def destroy
     @server.stop if @server.running?
     @server.destroy
-    redirect_to factorio_servers_path, notice: 'Factorio server was successfully deleted.'
+    redirect_to factorio_servers_path, notice: "Factorio server was successfully deleted."
   end
 
   def start
@@ -50,7 +50,7 @@ class FactorioServersController < ApplicationController
       end
     else
       respond_to do |format|
-        format.html { redirect_to @server, alert: 'Failed to start server.' }
+        format.html { redirect_to @server, alert: "Failed to start server." }
       end
     end
   end
@@ -64,7 +64,7 @@ class FactorioServersController < ApplicationController
       end
     else
       respond_to do |format|
-        format.html { redirect_to @server, alert: 'Failed to stop server.' }
+        format.html { redirect_to @server, alert: "Failed to stop server." }
       end
     end
   end
@@ -75,7 +75,7 @@ class FactorioServersController < ApplicationController
     @server.restart
 
     respond_to do |format|
-      format.html { redirect_to @server, notice: 'Server is restarting...' }
+      format.html { redirect_to @server, notice: "Server is restarting..." }
     end
   end
 
@@ -87,11 +87,11 @@ class FactorioServersController < ApplicationController
       format.html {
         message = if @update_info[:error]
                     "Error checking for updates: #{@update_info[:error]}"
-                  elsif @update_info[:update_available]
-                    'Update available!'
-                  else
-                    'No updates available.'
-                  end
+        elsif @update_info[:update_available]
+                    "Update available!"
+        else
+                    "No updates available."
+        end
         redirect_to @server, notice: message
       }
       format.json { render json: @update_info }
@@ -169,15 +169,15 @@ class FactorioServersController < ApplicationController
     if @server.running?
       respond_to do |format|
         format.html {
-          redirect_to @server, alert: 'Server must be stopped before it can be modified.'
+          redirect_to @server, alert: "Server must be stopped before it can be modified."
         }
         format.json {
-          render json: { error: 'Server must be stopped before it can be modified.' },
+          render json: { error: "Server must be stopped before it can be modified." },
           status: :unprocessable_entity
         }
         format.turbo_stream {
-          flash.now[:alert] = 'Server must be stopped before it can be modified.'
-          render turbo_stream: turbo_stream.replace('flash', partial: 'layouts/flash')
+          flash.now[:alert] = "Server must be stopped before it can be modified."
+          render turbo_stream: turbo_stream.replace("flash", partial: "layouts/flash")
         }
       end
     end

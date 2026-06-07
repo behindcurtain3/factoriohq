@@ -1,6 +1,6 @@
 class ServerModsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_mod, only: [:destroy]
+  before_action :set_mod, only: [ :destroy ]
 
   def index
     @server = current_user.factorio_servers.find(params[:factorio_server_id])
@@ -12,20 +12,20 @@ class ServerModsController < ApplicationController
 
     # Check if the server is running
     if @server.running?
-      redirect_to factorio_server_server_mods_path(@server), alert: 'Server is running. Please stop it before uploading mods.'
+      redirect_to factorio_server_server_mods_path(@server), alert: "Server is running. Please stop it before uploading mods."
       return
     end
 
     # Check if a file was uploaded
     if params[:mod_file].blank?
-      redirect_to factorio_server_server_mods_path(@server), alert: 'No file selected'
+      redirect_to factorio_server_server_mods_path(@server), alert: "No file selected"
       return
     end
 
     uploaded_file = params[:mod_file]
     # Ensure file has .zip extension
-    unless uploaded_file.original_filename.end_with?('.zip')
-      redirect_to factorio_server_server_mods_path(@server), alert: 'Save files must have .zip extension'
+    unless uploaded_file.original_filename.end_with?(".zip")
+      redirect_to factorio_server_server_mods_path(@server), alert: "Save files must have .zip extension"
       return
     end
 
@@ -37,7 +37,7 @@ class ServerModsController < ApplicationController
       mod_version = $2
     else
       redirect_to factorio_server_server_mods_path(@server),
-        alert: 'Invalid mod filename format. Expected: modname_version.zip'
+        alert: "Invalid mod filename format. Expected: modname_version.zip"
       return
     end
 
@@ -53,17 +53,17 @@ class ServerModsController < ApplicationController
       version: mod_version,
       factorio_server: @server)
     if server_mod.save
-      redirect_to factorio_server_server_mods_path(@server), notice: 'Mod uploaded successfully'
+      redirect_to factorio_server_server_mods_path(@server), notice: "Mod uploaded successfully"
     else
-      redirect_to factorio_server_server_mods_path(@server), alert: 'Failed to save mod information'
+      redirect_to factorio_server_server_mods_path(@server), alert: "Failed to save mod information"
     end
   end
 
   def destroy
     if @mod.destroy
-      redirect_to factorio_server_server_mods_path(@mod.factorio_server), notice: 'Mod removed successfully.'
+      redirect_to factorio_server_server_mods_path(@mod.factorio_server), notice: "Mod removed successfully."
     else
-      redirect_to factorio_server_server_mods_path(@mod.factorio_server), alert: 'Failed to remove mod.'
+      redirect_to factorio_server_server_mods_path(@mod.factorio_server), alert: "Failed to remove mod."
     end
   end
 
@@ -76,5 +76,4 @@ class ServerModsController < ApplicationController
   def server_mod_params
     params.require(:server_mod).permit(:name, :version, :factorio_server_id)
   end
-
 end

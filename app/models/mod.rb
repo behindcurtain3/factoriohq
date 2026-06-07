@@ -11,7 +11,7 @@ class Mod < ApplicationRecord
   after_update :update_mod_list
 
   def filename
-    name + '_' + version + '.zip'
+    name + "_" + version + ".zip"
   end
 
   def update_mod_list

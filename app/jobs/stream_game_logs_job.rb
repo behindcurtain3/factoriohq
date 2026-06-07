@@ -30,8 +30,8 @@ class StreamGameLogsJob < ApplicationJob
 
   def process_log_chunk(server, stream, chunk)
     # Clean the chunk
-    clean_chunk = chunk.encode('UTF-8', invalid: :replace, undef: :replace, replace: '?')
-                      .gsub(/[\x00-\x1F\x7F]/, '')
+    clean_chunk = chunk.encode("UTF-8", invalid: :replace, undef: :replace, replace: "?")
+                      .gsub(/[\x00-\x1F\x7F]/, "")
 
     # Process each line
     clean_chunk.split("\n").each do |line|

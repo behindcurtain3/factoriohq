@@ -1,5 +1,5 @@
-require 'net/http'
-require 'json'
+require "net/http"
+require "json"
 
 # == Schema Information
 #
@@ -71,11 +71,11 @@ class FactorioServer < ApplicationRecord
 
   # Statuses
   enum :status, {
-    stopped: 'stopped',
-    starting: 'starting',
-    running: 'running',
-    stopping: 'stopping',
-    error: 'error'
+    stopped: "stopped",
+    starting: "starting",
+    running: "running",
+    stopping: "stopping",
+    error: "error"
   }
 
   # Callbacks
@@ -95,7 +95,7 @@ class FactorioServer < ApplicationRecord
 
   # Instance methods
   def server_directory
-    root = ENV['FACTORIO_DATA_PATH']
+    root = ENV["FACTORIO_DATA_PATH"]
     root = "#{root}/#{self.class.namespace}" if self.class.namespace
     "#{root}/servers/#{id}"
   end
@@ -136,16 +136,16 @@ class FactorioServer < ApplicationRecord
   def start
     return false if running?
 
-    update(status: 'starting')
-    ServerOperationJob.perform_later(self, 'start')
+    update(status: "starting")
+    ServerOperationJob.perform_later(self, "start")
     true
   end
 
   def stop
     return false unless running?
 
-    update(status: 'stopping')
-    ServerOperationJob.perform_later(self, 'stop')
+    update(status: "stopping")
+    ServerOperationJob.perform_later(self, "stop")
     true
   end
 
@@ -159,11 +159,11 @@ class FactorioServer < ApplicationRecord
   end
 
   def running?
-    status == 'running'
+    status == "running"
   end
 
   def stopped?
-    status == 'stopped'
+    status == "stopped"
   end
 
   def container_exists?
@@ -183,7 +183,7 @@ class FactorioServer < ApplicationRecord
     {
       name: name,
       description: description,
-      tags: tags.present? ? tags.split : ["managed"],
+      tags: tags.present? ? tags.split : [ "managed" ],
       max_players: max_players,
       visibility: {
         public: visibility_public,
@@ -248,7 +248,7 @@ class FactorioServer < ApplicationRecord
       {
         name: "space-age",
         enabled: enable_space_age
-      },
+      }
     ]
   end
 
@@ -294,7 +294,7 @@ class FactorioServer < ApplicationRecord
     Rails.cache.fetch("factorio_versions/#{image_repository}", expires_in: 1.hour) do
       repo = docker_hub_repository
       # Custom registries can't be enumerated through the Docker Hub API.
-      next ["latest"] unless repo
+      next [ "latest" ] unless repo
 
       begin
         # Fetch tags from Docker Hub API
@@ -307,11 +307,11 @@ class FactorioServer < ApplicationRecord
 
         # Filter out non-version tags and sort properly
         version_regex = /^(\d+\.\d+\.\d+)$/
-        version_tags = versions.select { |v| v.match(version_regex) || v == 'latest' }
+        version_tags = versions.select { |v| v.match(version_regex) || v == "latest" }
 
         # Put 'latest' at the top, then sort versions in descending order
-        ['latest'] + version_tags.reject { |v| v == 'latest' }.sort_by do |v|
-          v.split('.').map(&:to_i)
+        [ "latest" ] + version_tags.reject { |v| v == "latest" }.sort_by do |v|
+          v.split(".").map(&:to_i)
         end.reverse
       rescue => e
         # Fallback to a minimal list if the API call fails
@@ -328,14 +328,14 @@ class FactorioServer < ApplicationRecord
 
     begin
       # Pull the latest image
-      latest_image = Docker::Image.create('fromImage' => image_reference('latest'))
+      latest_image = Docker::Image.create("fromImage" => image_reference("latest"))
 
       # Get current image ID
       container = Docker::Container.get(docker_container_id)
-      current_image_id = container.info['Image']
+      current_image_id = container.info["Image"]
 
       # Compare image IDs
-      if latest_image.id != current_image_id && version == 'latest'
+      if latest_image.id != current_image_id && version == "latest"
         return {
           update_available: true,
           current_id: current_image_id,
@@ -351,20 +351,20 @@ class FactorioServer < ApplicationRecord
 
   def update_version(new_version)
     # Can only update if server is stopped
-    return { success: false, message: 'Server must be stopped to update version' } unless stopped?
+    return { success: false, message: "Server must be stopped to update version" } unless stopped?
 
-    old_version = version || 'latest'
+    old_version = version || "latest"
 
     # Update the version
     if update(version: new_version)
       server_logs.create(
-        level: 'info',
+        level: "info",
         message: "Version changed from #{old_version} to #{new_version}",
         timestamp: Time.current
       )
       { success: true, message: "Version updated to #{new_version}" }
     else
-      { success: false, message: errors.full_messages.join(', ') }
+      { success: false, message: errors.full_messages.join(", ") }
     end
   end
 
@@ -393,7 +393,7 @@ class FactorioServer < ApplicationRecord
       errors.add(:save_file, "cannot contain path separators")
     end
 
-    unless save_file.end_with?('.zip')
+    unless save_file.end_with?(".zip")
       errors.add(:save_file, "must have .zip extension")
     end
   end

@@ -17,7 +17,7 @@ module ApplicationHelper
     html_content = markdown.render(text)
 
     # Sanitize the HTML content to prevent XSS attacks
-    sanitized_content = sanitize(html_content, tags: %w(a p img h1 h2 h3 h4 h5 h6 blockquote ul ol li code pre), attributes: %w(href src alt title))
+    sanitized_content = sanitize(html_content, tags: %w[a p img h1 h2 h3 h4 h5 h6 blockquote ul ol li code pre], attributes: %w[href src alt title])
 
     sanitized_content.html_safe
   end

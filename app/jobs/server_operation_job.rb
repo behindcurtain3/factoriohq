@@ -3,13 +3,13 @@ class ServerOperationJob < ApplicationJob
 
   def perform(server, operation)
     case operation
-    when 'start'
+    when "start"
       start_server(server)
-    when 'stop'
+    when "stop"
       stop_server(server)
     else
-      server.update(status: 'error')
-      server.server_logs.create(level: 'error', message: "Unknown operation: #{operation}", timestamp: Time.current)
+      server.update(status: "error")
+      server.server_logs.create(level: "error", message: "Unknown operation: #{operation}", timestamp: Time.current)
     end
   end
 
@@ -53,7 +53,7 @@ class ServerOperationJob < ApplicationJob
     dlc_flags << space_age_dlc if server.enable_space_age
     dlc_flags << elevated_rails_dlc if server.enable_elevated_rails
     dlc_flags << quality_dlc if server.enable_quality
-    dlc_string = dlc_flags.join(' ')
+    dlc_string = dlc_flags.join(" ")
     if dlc_string.empty?
       env_vars << "DLC_SPACE_AGE=false"
     else
@@ -66,17 +66,17 @@ class ServerOperationJob < ApplicationJob
     env_vars << "UPDATE_MODS_ON_START=true" if server.auto_update_mods
 
     # Use specified version or default to latest
-    version = server.version.present? ? server.version : 'latest'
+    version = server.version.present? ? server.version : "latest"
 
     image = server.image_reference(version)
 
     # Pull the image first to ensure it exists
     begin
-      Docker::Image.create('fromImage' => image)
+      Docker::Image.create("fromImage" => image)
     rescue => e
-      server.update(status: 'error')
+      server.update(status: "error")
       server.server_logs.create(
-        level: 'error',
+        level: "error",
         message: "Failed to pull Docker image #{image}: #{e.message}. Make sure this tag exists in the configured image repository.",
         timestamp: Time.current
       )
@@ -85,33 +85,33 @@ class ServerOperationJob < ApplicationJob
 
     # Create Docker container
     container = Docker::Container.create(
-      'name' => server.container_name,
-      'Image' => image,
-      'Hostname' => "factorio-#{server.id}",
-      'ExposedPorts' => {
+      "name" => server.container_name,
+      "Image" => image,
+      "Hostname" => "factorio-#{server.id}",
+      "ExposedPorts" => {
         "#{server.port}/udp" => {},
         "#{server.rcon_port}/tcp" => {}
       },
-      'HostConfig' => {
-        'Binds' => [
-          "#{server.server_directory}:/factorio",
+      "HostConfig" => {
+        "Binds" => [
+          "#{server.server_directory}:/factorio"
         ],
-        'PortBindings' => {
-          "#{server.port}/udp" => [{ 'HostPort' => server.port.to_s }],
-          "#{server.rcon_port}/tcp" => [{ 'HostPort' => server.rcon_port.to_s }]
+        "PortBindings" => {
+          "#{server.port}/udp" => [ { "HostPort" => server.port.to_s } ],
+          "#{server.rcon_port}/tcp" => [ { "HostPort" => server.rcon_port.to_s } ]
         },
-        'RestartPolicy' => {
-          'Name' => 'always'
+        "RestartPolicy" => {
+          "Name" => "always"
         }
       },
-      'Env' => env_vars
+      "Env" => env_vars
     )
 
     # Start the container
     container.start
 
-    server.update(docker_container_id: container.id, status: 'running')
-    server.server_logs.create(level: 'info', message: "Server started with version #{version}", timestamp: Time.current)
+    server.update(docker_container_id: container.id, status: "running")
+    server.server_logs.create(level: "info", message: "Server started with version #{version}", timestamp: Time.current)
 
     # Clear existing game logs
     server.game_logs.delete_all
@@ -120,8 +120,8 @@ class ServerOperationJob < ApplicationJob
     StreamGameLogsJob.perform_later(server.id)
 
   rescue => e
-    server.update(status: 'error')
-    server.server_logs.create(level: 'error', message: "Failed to start server: #{e.message}", timestamp: Time.current)
+    server.update(status: "error")
+    server.server_logs.create(level: "error", message: "Failed to start server: #{e.message}", timestamp: Time.current)
   end
 
   def stop_server(server)
@@ -134,16 +134,15 @@ class ServerOperationJob < ApplicationJob
       container = Docker::Container.get(server.docker_container_id)
       container.stop
       container.delete(force: true)
-      server.update(docker_container_id: nil, status: 'stopped')
-      server.server_logs.create(level: 'info', message: 'Server stopped', timestamp: Time.current)
+      server.update(docker_container_id: nil, status: "stopped")
+      server.server_logs.create(level: "info", message: "Server stopped", timestamp: Time.current)
     rescue Docker::Error::NotFoundError
       # Container already deleted, just update status
-      server.update(docker_container_id: nil, status: 'stopped')
-      server.server_logs.create(level: 'warn', message: 'Container not found, marked as stopped', timestamp: Time.current)
+      server.update(docker_container_id: nil, status: "stopped")
+      server.server_logs.create(level: "warn", message: "Container not found, marked as stopped", timestamp: Time.current)
     rescue => e
-      server.update(status: 'error')
-      server.server_logs.create(level: 'error', message: "Failed to stop server: #{e.message}", timestamp: Time.current)
+      server.update(status: "error")
+      server.server_logs.create(level: "error", message: "Failed to stop server: #{e.message}", timestamp: Time.current)
     end
   end
-
 end

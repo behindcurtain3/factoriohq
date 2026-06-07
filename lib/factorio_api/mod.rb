@@ -1,6 +1,5 @@
 module FactorioApi
   class Mod
-
     attr_reader :name
     attr_reader :downloads_count
     attr_reader :owner
@@ -44,15 +43,15 @@ module FactorioApi
       @source_url = mod_data.fetch("source_url", nil)
       @homepage = mod_data.fetch("homepage", nil)
       @tags = mod_data.fetch("tags", [])
-      @license = License::new(mod_data.fetch("license")) if mod_data.key?("license")
+      @license = License.new(mod_data.fetch("license")) if mod_data.key?("license")
       @deprecated = mod_data.fetch("deprecated", false)
 
       # Releases
-      @latest_release = Release::new(mod_data.fetch("latest_release")) if mod_data.key?("latest_release")
+      @latest_release = Release.new(mod_data.fetch("latest_release")) if mod_data.key?("latest_release")
       @releases = []
       if mod_data.key?("releases")
         mod_data["releases"].each do |release_data|
-          @releases << Release::new(release_data)
+          @releases << Release.new(release_data)
         end
       end
 

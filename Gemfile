@@ -56,7 +56,7 @@ gem "kaminari"
 gem "redcarpet"
 
 # RCON
-#gem "rconrb"
+# gem "rconrb"
 gem "steam-condenser"
 
 group :development, :test do
