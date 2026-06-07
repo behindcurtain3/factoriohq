@@ -1,14 +1,14 @@
 <div id="flash">
   <% if notice %>
     <div class="alert alert-success alert-dismissible fade show">
-      <%= notice %>
+      <%= sanitize notice, tags: %w[i], attributes: %w[class] %>
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
   <% end %>
 
   <% if alert %>
     <div class="alert alert-danger alert-dismissible fade show">
-      <%= alert %>
+      <%= sanitize alert, tags: %w[i], attributes: %w[class] %>
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
   <% end %>

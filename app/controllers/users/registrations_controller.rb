@@ -5,7 +5,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
   def check_registrations_enabled
     unless SiteSetting.get('registrations_enabled', 'true') == 'true'
-      flash[:alert] = "New registrations are currently disabled."
+      flash[:alert] = '<i class="bi bi-exclamation-triangle-fill me-2"></i>New registrations are currently disabled.'.html_safe
       redirect_to new_user_session_path
     end
   end
