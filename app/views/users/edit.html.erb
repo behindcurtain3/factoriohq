@@ -25,3 +25,44 @@
     <% end %>
   </div>
 </div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h5>Change Password</h5>
+  </div>
+  <div class="card-body">
+    <%= form_with(model: current_user, url: update_password_user_path(current_user), method: :patch, local: true) do |form| %>
+      <% if current_user.errors.any? %>
+        <div class="alert alert-danger">
+          <ul class="mb-0">
+            <% current_user.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="mb-3">
+        <%= form.label :current_password, "Current Password", class: "form-label" %>
+        <%= form.password_field :current_password, autocomplete: "current-password", class: "form-control" %>
+      </div>
+
+      <div class="mb-3">
+        <%= form.label :password, "New Password", class: "form-label" %>
+        <%= form.password_field :password, autocomplete: "new-password", class: "form-control" %>
+        <% if @minimum_password_length %>
+          <div class="form-text"><%= @minimum_password_length %> characters minimum</div>
+        <% end %>
+      </div>
+
+      <div class="mb-3">
+        <%= form.label :password_confirmation, "Confirm New Password", class: "form-label" %>
+        <%= form.password_field :password_confirmation, autocomplete: "new-password", class: "form-control" %>
+      </div>
+
+      <div class="actions">
+        <%= form.submit "Change Password", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

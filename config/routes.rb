@@ -28,7 +28,11 @@ Rails.application.routes.draw do
   resources :mods, only: [:index, :show, :create] do
     patch :toggle, on: :member
   end
-  resources :users, only: [:edit, :update]
+  resources :users, only: [:edit, :update] do
+    member do
+      patch :update_password
+    end
+  end
 
   namespace :admin do
     get 'site_settings', to: 'site_settings#index'
