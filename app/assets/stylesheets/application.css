@@ -79,9 +79,13 @@ body {
   background-size: 46px 46px, 46px 46px, 100% 100%;
   background-attachment: fixed;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-main.container { padding-bottom: 3rem; }
+main.container { padding-bottom: 3rem; flex: 1 0 auto; }
+
+.fctr-footer { flex-shrink: 0; }
 
 h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5 {
   font-family: "Titillium Web", sans-serif;
