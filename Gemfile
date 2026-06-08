@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.0.2"
+gem "rails", "~> 8.1.0"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use sqlite3 as the database for Active Record
@@ -44,10 +44,10 @@ gem "thruster", require: false
 gem "docker-api", "~> 2.4"
 
 # Authentication
-gem "devise", "~> 4.9"
+gem "devise", "~> 5.0"
 
 # Environment variables
-gem "dotenv-rails", "~> 3.1.7"
+gem "dotenv-rails", "~> 3.2.0"
 
 # Pagination
 gem "kaminari"
