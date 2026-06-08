@@ -1,61 +1,52 @@
-version: '3.8'
+# Run FactorioHQ with Docker Compose.
+#
+# This builds the production image (see Dockerfile) and serves the Rails app
+# through Thruster + Puma on port 80. There is intentionally NO Postgres, Redis,
+# or Sidekiq service:
+#   * the database is SQLite, stored in the `storage` volume (primary, plus the
+#     Solid Cache / Solid Queue / Solid Cable databases), and
+#   * background jobs run inside Puma via Solid Queue (SOLID_QUEUE_IN_PUMA).
+#
+# FactorioHQ manages Factorio game servers by talking to the *host* Docker
+# daemon, so the container needs the Docker socket. Because the host daemon
+# resolves each Factorio server's bind mount on the host filesystem,
+# FACTORIO_DATA_PATH must be an absolute path that exists on the host and is
+# mounted at the SAME path inside this container.
+#
+# Configure these in a `.env` file next to this compose file (see .env.example):
+#   RAILS_MASTER_KEY    contents of config/master.key
+#   FACTORIO_DATA_PATH  absolute host path for Factorio data, e.g. /opt/factoriohq/data
+#   WEB_PORT            host port to publish (default 80)
+#   DOCKER_GID          host's docker group id: `getent group docker | cut -d: -f3`
 
 services:
-  db:
-    image: postgres:14
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_USER: factorio
-      POSTGRES_DB: factorio_manager_development
-    ports:
-      - "5432:5432"
-
-  redis:
-    image: redis:7
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-
   web:
     build:
       context: .
-      dockerfile: Dockerfile.rails
-    volumes:
-      - .:/app
-      - factorio_data:/factorio_data
+      dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
-      - "3000:3000"
-    depends_on:
-      - db
-      - redis
+      - "${WEB_PORT:-80}:80"
     environment:
-      DATABASE_URL: postgres://factorio:password@db/factorio_manager_development
-      REDIS_URL: redis://redis:6379/1
-      RAILS_ENV: development
-      FACTORIO_DATA_PATH: /factorio_data
-
-  sidekiq:
-    build:
-      context: .
-      dockerfile: Dockerfile.rails
-    command: bundle exec sidekiq
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY:?set RAILS_MASTER_KEY to the contents of config/master.key}
+      FACTORIO_DATA_PATH: ${FACTORIO_DATA_PATH:?set FACTORIO_DATA_PATH to an absolute host path}
+      DOCKER_URL: unix:///var/run/docker.sock
+      # Run the Solid Queue supervisor inside Puma so jobs process without a separate worker.
+      SOLID_QUEUE_IN_PUMA: "true"
+      # Comma-separated extra Host header values to allow (DNS-rebinding protection).
+      # APP_HOSTS: factorio.example.com
+    # The image runs as a non-root user (uid 845); add the host's docker group so
+    # it can read /var/run/docker.sock. Set DOCKER_GID in .env to match your host.
+    group_add:
+      - "${DOCKER_GID:-999}"
     volumes:
-      - .:/app
-      - factorio_data:/factorio_data
-    depends_on:
-      - db
-      - redis
-      - web
-    environment:
-      DATABASE_URL: postgres://factorio:password@db/factorio_manager_development
-      REDIS_URL: redis://redis:6379/1
-      RAILS_ENV: development
-      FACTORIO_DATA_PATH: /factorio_data
+      # SQLite databases and Active Storage files (persisted across rebuilds).
+      - factoriohq_storage:/rails/storage
+      # Manage Factorio containers via the host Docker daemon.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Factorio server data, mounted at the same path inside and outside the
+      # container so the host daemon can resolve per-server bind mounts.
+      - ${FACTORIO_DATA_PATH}:${FACTORIO_DATA_PATH}
 
 volumes:
-  postgres_data:
-  redis_data:
-  factorio_data:
+  factoriohq_storage:
