@@ -257,6 +257,8 @@
       </div>
     </div>
 
+    <%= render_hook "server_form", form: form, server: server %>
+
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
       <%= link_to "Cancel", server, class: "btn btn-secondary me-md-2" if server.persisted? %>
       <%= form.submit class: "btn btn-primary" %>

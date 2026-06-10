@@ -11,6 +11,7 @@
         <li class="nav-item">
           <%= link_to "Browse Mods", mods_path, class: "nav-link" %>
         </li>
+        <%= render_hook "navbar" %>
       </ul>
     <% end %>
 

@@ -53,15 +53,15 @@ class ServerOperationJobTest < ActiveJob::TestCase
     assert container.started?
 
     # Config files land in the server directory
-    settings = JSON.parse(File.read("#{server.server_directory}/config/server-settings.json"))
+    settings = JSON.parse(File.read("#{local_host.server_directory(server)}/config/server-settings.json"))
     assert_equal "Alpha Base", settings["name"]
-    assert_equal "[]", File.read(server.admin_list_path)
-    assert_equal "alpha-rcon", File.read(server.rconpw_path)
+    assert_equal "[]", File.read(local_host.admin_list_path(server))
+    assert_equal "alpha-rcon", File.read(local_host.rconpw_path(server))
 
     # Container is wired to the right image, name, ports and bind mount
     assert_equal server.container_name, created_config["name"]
     assert_equal "factoriotools/factorio:latest", created_config["Image"]
-    assert_includes created_config["HostConfig"]["Binds"], "#{server.server_directory}:/factorio"
+    assert_includes created_config["HostConfig"]["Binds"], "#{local_host.server_directory(server)}:/factorio"
     assert_equal [ { "HostPort" => "34197" } ], created_config["HostConfig"]["PortBindings"]["34197/udp"]
     assert_equal [ { "HostPort" => "27015" } ], created_config["HostConfig"]["PortBindings"]["27015/tcp"]
     assert_includes created_config["Env"], "PORT=34197"

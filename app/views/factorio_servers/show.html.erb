@@ -1,6 +1,7 @@
 <%= turbo_stream_from @server %>
-<% connect_address = "#{request.host}:#{@server.port}" %>
-<% rcon_address = "#{request.host}:#{@server.rcon_port}" %>
+<% game_host = @server.host_driver.game_host(@server) || request.host %>
+<% connect_address = "#{game_host}:#{@server.port}" %>
+<% rcon_address = "#{game_host}:#{@server.rcon_port}" %>
 <div id="factorio-server-show" data-server-id="<%= @server.id %>">
   <%# ---------- Header ---------- %>
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
@@ -14,6 +15,8 @@
       <i class="bi bi-arrow-left"></i> Back
     <% end %>
   </div>
+
+  <%= render_hook "server_show", server: @server %>
 
   <%# ---------- Controls ---------- %>
   <div class="card mb-4">

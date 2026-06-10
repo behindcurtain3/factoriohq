@@ -29,7 +29,7 @@ class ModsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to factorio_server_path(@server)
-    assert File.exist?(File.join(@server.mods_directory, "cool-mod_2.0.0.zip"))
+    assert File.exist?(File.join(local_host.mods_directory(@server), "cool-mod_2.0.0.zip"))
   end
 
   test "cannot install a mod onto another user's server" do
@@ -69,6 +69,6 @@ class ModsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to factorio_server_path(@server)
     assert_match "SHA1 mismatch", flash[:alert]
-    assert_not File.exist?(File.join(@server.mods_directory, "cool-mod_2.0.0.zip"))
+    assert_not File.exist?(File.join(local_host.mods_directory(@server), "cool-mod_2.0.0.zip"))
   end
 end

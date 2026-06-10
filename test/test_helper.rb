@@ -29,6 +29,19 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
+    # The local driver, for asserting against on-disk storage paths.
+    def local_host
+      @local_host ||= Hosting::LocalDockerHost.new
+    end
+
+    def with_rails_env(name)
+      original = Rails.env
+      Rails.env = name
+      yield
+    ensure
+      Rails.env = original
+    end
+
     # Minimal replacement for minitest/mock's `stub` (no longer bundled as of
     # Minitest 6): temporarily replaces a method on the receiver for the
     # duration of the block, then restores the original.

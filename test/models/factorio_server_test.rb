@@ -45,20 +45,17 @@ class FactorioServerTest < ActiveSupport::TestCase
 
   # --- Docker namespacing (production stays legacy; other envs are prefixed) ---
 
-  test "container name and data dir are unprefixed in production" do
+  test "container name is unprefixed in production" do
     with_rails_env("production") do
       assert_nil FactorioServer.namespace
       assert_equal "factorio-server-#{@server.id}", @server.container_name
-      assert @server.server_directory.end_with?("/servers/#{@server.id}")
-      assert_not_includes @server.server_directory, "/production/"
     end
   end
 
-  test "container name and data dir are namespaced outside production" do
+  test "container name is namespaced outside production" do
     with_rails_env("development") do
       assert_equal "development", FactorioServer.namespace
       assert_equal "factorio-development-server-#{@server.id}", @server.container_name
-      assert_includes @server.server_directory, "/development/servers/#{@server.id}"
     end
   end
 
@@ -104,10 +101,6 @@ class FactorioServerTest < ActiveSupport::TestCase
     assert_equal [], build_server(admin_usernames: "   ").admin_list
   end
 
-  test "admin_list_path lives in the server config dir" do
-    assert @server.admin_list_path.end_with?("/config/server-adminlist.json")
-  end
-
   private
 
   def build_server(**attrs)
@@ -117,13 +110,5 @@ class FactorioServerTest < ActiveSupport::TestCase
       port: 40_000,
       rcon_port: 41_000
     }.merge(attrs))
-  end
-
-  def with_rails_env(name)
-    original = Rails.env
-    Rails.env = name
-    yield
-  ensure
-    Rails.env = original
   end
 end

@@ -5,8 +5,8 @@ class DeleteModJobTest < ActiveJob::TestCase
 
   test "deletes the mod file from the mods directory" do
     server = factorio_servers(:one)
-    FileUtils.mkdir_p(server.mods_directory)
-    path = File.join(server.mods_directory, "cool-mod_1.2.3.zip")
+    FileUtils.mkdir_p(local_host.mods_directory(server))
+    path = File.join(local_host.mods_directory(server), "cool-mod_1.2.3.zip")
     File.binwrite(path, "PK\x03\x04")
 
     DeleteModJob.perform_now(server, "cool-mod_1.2.3.zip")

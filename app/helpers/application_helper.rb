@@ -1,4 +1,14 @@
 module ApplicationHelper
+  # Renders an optional extension partial (app/views/hooks/_<name>) when one
+  # is defined, e.g. by an engine layering extra features onto this app;
+  # renders nothing otherwise.
+  def render_hook(name, **locals)
+    partial = "hooks/#{name}"
+    return unless lookup_context.exists?(partial, [], true)
+
+    render(partial, **locals)
+  end
+
   def markdown(text)
     return "" if text.blank?
 

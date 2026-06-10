@@ -93,40 +93,6 @@ class FactorioServer < ApplicationRecord
     Rails.env.production? ? nil : Rails.env.to_s
   end
 
-  # Instance methods
-  def server_directory
-    root = ENV["FACTORIO_DATA_PATH"]
-    root = "#{root}/#{self.class.namespace}" if self.class.namespace
-    "#{root}/servers/#{id}"
-  end
-
-  def saves_directory
-    "#{server_directory}/saves"
-  end
-
-  def mods_directory
-    "#{server_directory}/mods"
-  end
-
-  def config_file_path
-    "#{server_directory}/config/server-settings.json"
-  end
-
-  def mod_list_path
-    "#{mods_directory}/mod-list.json"
-  end
-
-  def admin_list_path
-    "#{server_directory}/config/server-adminlist.json"
-  end
-
-  # The factoriotools image reads the RCON password from this file (and would
-  # otherwise generate a random one we don't know). Writing it lets us control
-  # the password so the app can authenticate to RCON.
-  def rconpw_path
-    "#{server_directory}/config/rconpw"
-  end
-
   # Factorio admin usernames parsed from the free-text field. Accepts commas,
   # whitespace, or newlines as separators.
   def admin_list

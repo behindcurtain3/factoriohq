@@ -25,7 +25,7 @@ class ServerModsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to factorio_server_server_mods_path(@server)
-    assert File.exist?(File.join(@server.mods_directory, "cool-mod_1.2.3.zip"))
+    assert File.exist?(File.join(local_host.mods_directory(@server), "cool-mod_1.2.3.zip"))
 
     mod = @server.mods.order(:created_at).last
     assert_equal "cool-mod", mod.name

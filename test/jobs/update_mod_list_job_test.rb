@@ -5,11 +5,11 @@ class UpdateModListJobTest < ActiveJob::TestCase
 
   test "writes the mod list with built-in and uploaded mods" do
     server = factorio_servers(:one)
-    FileUtils.mkdir_p(server.mods_directory)
+    FileUtils.mkdir_p(local_host.mods_directory(server))
 
     UpdateModListJob.perform_now(server)
 
-    mods = JSON.parse(File.read(server.mod_list_path))["mods"]
+    mods = JSON.parse(File.read(local_host.mod_list_path(server)))["mods"]
     names = mods.map { |mod| mod["name"] }
     assert_includes names, "base"
     assert_includes names, "space-exploration"

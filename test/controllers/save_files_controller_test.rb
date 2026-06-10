@@ -35,7 +35,7 @@ class SaveFilesControllerTest < ActionDispatch::IntegrationTest
          params: { save_file: uploaded_zip("new-map.zip") }
 
     assert_redirected_to factorio_server_save_files_path(@server)
-    assert File.exist?(File.join(@server.saves_directory, "new-map.zip"))
+    assert File.exist?(File.join(local_host.saves_directory(@server), "new-map.zip"))
   end
 
   test "create rejects files without a .zip extension" do
@@ -44,7 +44,7 @@ class SaveFilesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to factorio_server_save_files_path(@server)
     assert_match "zip", flash[:alert]
-    assert_not File.exist?(File.join(@server.saves_directory, "not-a-save.txt"))
+    assert_not File.exist?(File.join(local_host.saves_directory(@server), "not-a-save.txt"))
   end
 
   test "create rejects a missing file" do
@@ -63,7 +63,7 @@ class SaveFilesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to factorio_server_save_files_path(running)
     assert_match "stopped", flash[:alert]
-    assert_not File.exist?(File.join(running.saves_directory, "map.zip"))
+    assert_not File.exist?(File.join(local_host.saves_directory(running), "map.zip"))
   end
 
   test "show downloads a save file" do
@@ -88,7 +88,7 @@ class SaveFilesControllerTest < ActionDispatch::IntegrationTest
     delete delete_factorio_server_save_files_path(@server, "world.zip")
 
     assert_redirected_to factorio_server_save_files_path(@server)
-    assert_not File.exist?(File.join(@server.saves_directory, "world.zip"))
+    assert_not File.exist?(File.join(local_host.saves_directory(@server), "world.zip"))
   end
 
   test "destroy clears save_file when deleting the current save" do
@@ -110,8 +110,8 @@ class SaveFilesControllerTest < ActionDispatch::IntegrationTest
   private
 
   def write_save(filename, content = "PK\x03\x04")
-    FileUtils.mkdir_p(@server.saves_directory)
-    File.binwrite(File.join(@server.saves_directory, filename), content)
+    FileUtils.mkdir_p(local_host.saves_directory(@server))
+    File.binwrite(File.join(local_host.saves_directory(@server), filename), content)
   end
 
   def uploaded_zip(filename)
