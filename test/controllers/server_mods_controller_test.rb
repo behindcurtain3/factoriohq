@@ -65,6 +65,17 @@ class ServerModsControllerTest < ActionDispatch::IntegrationTest
     assert_match "running", flash[:alert]
   end
 
+  test "cannot delete another user's mod" do
+    sign_in users(:two)
+    mod = mods(:one) # belongs to user one's server
+
+    assert_no_difference -> { Mod.count } do
+      delete factorio_server_server_mod_path(@server, mod)
+    end
+
+    assert_response :not_found
+  end
+
   test "destroy removes the mod and schedules file deletion" do
     mod = mods(:one)
 

@@ -16,7 +16,7 @@ class ModsController < ApplicationController
   end
 
   def create
-    @server = FactorioServer.find(params[:mod][:factorio_server_id])
+    @server = current_user.factorio_servers.find(params[:mod][:factorio_server_id])
     @mod = FactorioApi::Client.get_mod(params[:mod][:name])
     release = @mod.releases.find { |release| release.version == params[:mod][:version] }
     filename = @mod.name + "_" + release.version + ".zip"
@@ -49,7 +49,7 @@ class ModsController < ApplicationController
   end
 
   def toggle
-    @mod = Mod.find(params[:id])
+    @mod = Mod.where(factorio_server: current_user.factorio_servers).find(params[:id])
     if @mod.update(enabled: !@mod.enabled)
       redirect_to factorio_server_server_mod_path(@mod.factorio_server), notice: "Mod toggled successfully."
     else

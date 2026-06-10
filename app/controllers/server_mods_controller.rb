@@ -65,7 +65,7 @@ class ServerModsController < ApplicationController
   private
 
   def set_mod
-    @mod = Mod.find(params[:id])
+    @mod = Mod.where(factorio_server: current_user.factorio_servers).find(params[:id])
   end
 
   def server_mod_params

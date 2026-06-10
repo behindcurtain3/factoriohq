@@ -32,6 +32,26 @@ class ModsControllerTest < ActionDispatch::IntegrationTest
     assert File.exist?(File.join(@server.mods_directory, "cool-mod_2.0.0.zip"))
   end
 
+  test "cannot install a mod onto another user's server" do
+    other_server = factorio_servers(:two)
+
+    assert_no_difference -> { Mod.count } do
+      post mods_path, params: { mod: { name: "cool-mod", version: "2.0.0", factorio_server_id: other_server.id } }
+    end
+
+    assert_response :not_found
+  end
+
+  test "cannot toggle another user's mod" do
+    sign_in users(:two)
+    mod = mods(:one) # belongs to user one's server
+
+    patch toggle_mod_path(mod)
+
+    assert_response :not_found
+    assert mod.reload.enabled
+  end
+
   test "create rejects a download whose checksum does not match" do
     release = Release.new("2.0.0", "/download/cool-mod", "expected-sha1")
     portal_mod = PortalMod.new("cool-mod", [ release ])
