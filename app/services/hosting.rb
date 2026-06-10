@@ -30,5 +30,9 @@ module Hosting
 
       class_name.constantize.new
     end
+
+    def registered?(host_type)
+      @registry.key?(host_type.to_s)
+    end
   end
 end

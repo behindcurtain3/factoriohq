@@ -39,6 +39,7 @@ class FactorioServer < ApplicationRecord
                        numericality: { greater_than: 1024, less_than: 65535 },
                        uniqueness: true
   validate :validate_save_file
+  validate :validate_host_type
 
   # Default values
   attribute :port, :integer, default: 34197
@@ -327,6 +328,10 @@ class FactorioServer < ApplicationRecord
     self.rcon_password ||= SecureRandom.hex(12)
     self.game_password ||= SecureRandom.hex(8) if game_password.blank?
     self.admin_password ||= SecureRandom.hex(10)
+  end
+
+  def validate_host_type
+    errors.add(:host_type, "is not a registered host type") unless Hosting.registered?(host_type)
   end
 
   def validate_save_file

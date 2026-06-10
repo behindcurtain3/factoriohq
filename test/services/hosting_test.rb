@@ -10,10 +10,18 @@ class HostingTest < ActiveSupport::TestCase
 
   test "raises for an unregistered host_type" do
     server = factorio_servers(:one)
-    server.host_type = "droplet"
+    server.host_type = "never-registered"
 
     error = assert_raises(Hosting::Error) { Hosting.driver_for(server) }
-    assert_match "droplet", error.message
+    assert_match "never-registered", error.message
+  end
+
+  test "a server with an unregistered host_type is invalid" do
+    server = factorio_servers(:one)
+    server.host_type = "never-registered"
+
+    assert_not server.valid?
+    assert server.errors[:host_type].present?
   end
 
   test "drivers can be registered by class name" do
