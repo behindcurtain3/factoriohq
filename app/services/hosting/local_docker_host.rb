@@ -28,6 +28,29 @@ module Hosting
       false
     end
 
+    # Looked up by name rather than recorded id so a lost docker_container_id
+    # still resolves to the right container.
+    def container_state(server)
+      container = Docker::Container.get(server.container_name)
+
+      if container.info["State"]["Status"] == "running"
+        ContainerState.new(:running, container.id)
+      else
+        ContainerState.new(:stopped, container.id)
+      end
+    rescue Docker::Error::NotFoundError
+      ContainerState.new(:missing, nil)
+    end
+
+    # Follows the container's output, yielding each chunk as it arrives.
+    # Blocks until the container stops or the connection drops.
+    def stream_logs(server, since:, &block)
+      container = Docker::Container.get(server.docker_container_id)
+      container.streaming_logs(stdout: true, stderr: true, follow: true, since: since.to_i) do |_stream, chunk|
+        block.call(chunk)
+      end
+    end
+
     def check_for_updates(server)
       return unless server.docker_container_id.present?
 
@@ -69,6 +92,16 @@ module Hosting
       # ignores any RCON_PASSWORD env var, so we must write the file ourselves for
       # the app to be able to authenticate. Always overwrite so it stays in sync.
       File.write(server.rconpw_path, server.rcon_password)
+    end
+
+    def write_mod_list(server)
+      File.write(server.mod_list_path, server.get_mod_list.to_json)
+    end
+
+    def delete_mod(server, filename)
+      path = File.join(server.mods_directory, filename)
+
+      File.delete(path) if File.exist?(path)
     end
 
     def rcon_host(_server)

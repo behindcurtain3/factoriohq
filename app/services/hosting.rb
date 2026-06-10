@@ -11,6 +11,10 @@ module Hosting
   # Raised by a driver when a server's container no longer exists.
   class ContainerMissingError < Error; end
 
+  # Observed state of a server's container: status is :running, :stopped or
+  # :missing; container_id is nil when missing.
+  ContainerState = Struct.new(:status, :container_id)
+
   # Class names rather than classes so code reloading can't strand stale
   # constants in the registry.
   @registry = { "local" => "Hosting::LocalDockerHost" }

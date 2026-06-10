@@ -1,4 +1,3 @@
-# Create a new job: app/jobs/stream_game_logs_job.rb
 class StreamGameLogsJob < ApplicationJob
   queue_as :logs
 
@@ -7,14 +6,11 @@ class StreamGameLogsJob < ApplicationJob
     return unless server&.running? && server&.docker_container_id.present?
 
     begin
-      container = Docker::Container.get(server.docker_container_id)
-
       # Get timestamp of last log to avoid duplication
       last_log_time = server.game_logs.maximum(:created_at) || Time.at(0)
 
-      # Start streaming logs since the server started
-      container.streaming_logs(stdout: true, stderr: true, follow: true, since: last_log_time.to_i) do |stream, chunk|
-        process_log_chunk(server, stream, chunk)
+      server.host_driver.stream_logs(server, since: last_log_time) do |chunk|
+        process_log_chunk(server, chunk)
       end
     rescue => e
       Rails.logger.error "Log streaming error: #{e.message}"
@@ -28,7 +24,7 @@ class StreamGameLogsJob < ApplicationJob
 
   private
 
-  def process_log_chunk(server, stream, chunk)
+  def process_log_chunk(server, chunk)
     # Clean the chunk
     clean_chunk = chunk.encode("UTF-8", invalid: :replace, undef: :replace, replace: "?")
                       .gsub(/[\x00-\x1F\x7F]/, "")

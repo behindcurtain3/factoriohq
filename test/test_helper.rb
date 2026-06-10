@@ -2,6 +2,25 @@ ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
 
+# Points FACTORIO_DATA_PATH at a throwaway directory for tests that touch
+# server files on disk.
+module TmpFactorioData
+  extend ActiveSupport::Concern
+
+  included do
+    setup do
+      @original_data_path = ENV["FACTORIO_DATA_PATH"]
+      @factorio_data_dir = Dir.mktmpdir
+      ENV["FACTORIO_DATA_PATH"] = @factorio_data_dir
+    end
+
+    teardown do
+      ENV["FACTORIO_DATA_PATH"] = @original_data_path
+      FileUtils.remove_entry(@factorio_data_dir) if File.directory?(@factorio_data_dir)
+    end
+  end
+end
+
 module ActiveSupport
   class TestCase
     # Run tests in parallel with specified workers

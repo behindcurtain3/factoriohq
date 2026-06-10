@@ -17,16 +17,7 @@ class ServerOperationJobTest < ActiveJob::TestCase
     def deleted? = !!@deleted
   end
 
-  setup do
-    @original_data_path = ENV["FACTORIO_DATA_PATH"]
-    @data_dir = Dir.mktmpdir
-    ENV["FACTORIO_DATA_PATH"] = @data_dir
-  end
-
-  teardown do
-    ENV["FACTORIO_DATA_PATH"] = @original_data_path
-    FileUtils.remove_entry(@data_dir) if File.directory?(@data_dir)
-  end
+  include TmpFactorioData
 
   test "an unknown operation marks the server errored and logs it" do
     server = factorio_servers(:one)

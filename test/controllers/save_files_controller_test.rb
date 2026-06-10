@@ -3,18 +3,11 @@ require "test_helper"
 class SaveFilesControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
-  setup do
-    @original_data_path = ENV["FACTORIO_DATA_PATH"]
-    @data_dir = Dir.mktmpdir
-    ENV["FACTORIO_DATA_PATH"] = @data_dir
+  include TmpFactorioData
 
+  setup do
     @server = factorio_servers(:one)
     sign_in users(:one)
-  end
-
-  teardown do
-    ENV["FACTORIO_DATA_PATH"] = @original_data_path
-    FileUtils.remove_entry(@data_dir) if File.directory?(@data_dir)
   end
 
   test "redirects guests to sign in" do
@@ -122,7 +115,7 @@ class SaveFilesControllerTest < ActionDispatch::IntegrationTest
   end
 
   def uploaded_zip(filename)
-    path = File.join(@data_dir, filename)
+    path = File.join(@factorio_data_dir, filename)
     File.binwrite(path, "PK\x03\x04")
     Rack::Test::UploadedFile.new(path, "application/zip")
   end

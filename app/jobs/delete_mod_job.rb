@@ -2,9 +2,7 @@ class DeleteModJob < ApplicationJob
   queue_as :default
 
   def perform(server, filename)
-    path = File.join(server.mods_directory, filename)
-
-    File.delete(path) if File.exist?(path)
+    server.host_driver.delete_mod(server, filename)
 
     Rails.logger.info("Deleted mod file: #{filename}")
   end

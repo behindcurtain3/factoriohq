@@ -4,18 +4,11 @@ class ServerModsControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include ActiveJob::TestHelper
 
-  setup do
-    @original_data_path = ENV["FACTORIO_DATA_PATH"]
-    @data_dir = Dir.mktmpdir
-    ENV["FACTORIO_DATA_PATH"] = @data_dir
+  include TmpFactorioData
 
+  setup do
     @server = factorio_servers(:one)
     sign_in users(:one)
-  end
-
-  teardown do
-    ENV["FACTORIO_DATA_PATH"] = @original_data_path
-    FileUtils.remove_entry(@data_dir) if File.directory?(@data_dir)
   end
 
   test "index lists the server's mods" do
@@ -86,7 +79,7 @@ class ServerModsControllerTest < ActionDispatch::IntegrationTest
   private
 
   def uploaded_mod(filename)
-    path = File.join(@data_dir, filename)
+    path = File.join(@factorio_data_dir, filename)
     File.binwrite(path, "PK\x03\x04")
     Rack::Test::UploadedFile.new(path, "application/zip")
   end
