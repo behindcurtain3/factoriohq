@@ -166,11 +166,14 @@ class FactorioServer < ApplicationRecord
     status == "stopped"
   end
 
+  # The host driver runs this server wherever its host_type says it lives
+  # (drivers are registered in Hosting).
+  def host_driver
+    Hosting.driver_for(self)
+  end
+
   def container_exists?
-    Docker::Container.get(docker_container_id)
-    true
-  rescue Docker::Error::NotFoundError
-    false
+    host_driver.container_exists?(self)
   end
 
   def container_name
@@ -324,29 +327,7 @@ class FactorioServer < ApplicationRecord
   end
 
   def check_for_updates
-    return unless docker_container_id.present?
-
-    begin
-      # Pull the latest image
-      latest_image = Docker::Image.create("fromImage" => image_reference("latest"))
-
-      # Get current image ID
-      container = Docker::Container.get(docker_container_id)
-      current_image_id = container.info["Image"]
-
-      # Compare image IDs
-      if latest_image.id != current_image_id && version == "latest"
-        return {
-          update_available: true,
-          current_id: current_image_id,
-          latest_id: latest_image.id
-        }
-      end
-    rescue => e
-      return { error: e.message }
-    end
-
-    { update_available: false }
+    host_driver.check_for_updates(self)
   end
 
   def update_version(new_version)
@@ -369,11 +350,7 @@ class FactorioServer < ApplicationRecord
   end
 
   def create_server_directory
-    # Create the server directory if it doesn't exist
-    FileUtils.mkdir_p(server_directory)
-    FileUtils.mkdir_p(saves_directory)
-    FileUtils.mkdir_p(mods_directory)
-    FileUtils.mkdir_p(File.dirname(config_file_path))
+    host_driver.prepare(self)
 
     UpdateModListJob.perform_later(self)
   end
