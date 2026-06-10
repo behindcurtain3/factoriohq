@@ -126,7 +126,7 @@ class FactorioServersController < ApplicationController
     end
 
     begin
-      response = RconService.new("127.0.0.1", @server.rcon_port, @server.rcon_password).execute(command)
+      response = RconService.new(@server.host_driver.rcon_host(@server), @server.rcon_port, @server.rcon_password).execute(command)
 
       @server.server_logs.create(
         level: "info",

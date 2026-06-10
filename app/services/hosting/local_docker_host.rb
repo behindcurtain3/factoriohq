@@ -94,6 +94,42 @@ module Hosting
       File.write(server.rconpw_path, server.rcon_password)
     end
 
+    def list_saves(server)
+      Dir.glob(File.join(server.saves_directory, "*.zip")).map do |file|
+        {
+          name: File.basename(file),
+          size: File.size(file),
+          modified: File.mtime(file)
+        }
+      end.sort_by { |file| file[:modified] }.reverse
+    end
+
+    # Local filesystem path for send_file, or nil when the save doesn't
+    # exist. Remote drivers may expose a URL instead.
+    def save_path_for_download(server, filename)
+      path = File.join(server.saves_directory, filename)
+      File.exist?(path) ? path : nil
+    end
+
+    def write_save(server, filename, io)
+      FileUtils.mkdir_p(server.saves_directory)
+      File.binwrite(File.join(server.saves_directory, filename), io.read)
+    end
+
+    # Returns false when the file was already gone.
+    def delete_save(server, filename)
+      path = File.join(server.saves_directory, filename)
+      return false unless File.exist?(path)
+
+      File.delete(path)
+      true
+    end
+
+    def write_mod(server, filename, io)
+      FileUtils.mkdir_p(server.mods_directory)
+      File.binwrite(File.join(server.mods_directory, filename), io.read)
+    end
+
     def write_mod_list(server)
       File.write(server.mod_list_path, server.get_mod_list.to_json)
     end

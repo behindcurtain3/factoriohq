@@ -4,7 +4,7 @@ class SaveFilesController < ApplicationController
   before_action :ensure_server_not_running, only: [ :create, :destroy, :set_as_current ]
 
   def index
-    @save_files = list_save_files
+    @save_files = @server.host_driver.list_saves(@server)
   end
 
   def create
@@ -20,25 +20,16 @@ class SaveFilesController < ApplicationController
       return
     end
 
-    # Save file to server's saves directory
-    filename = uploaded_file.original_filename
-    file_path = File.join(@server.saves_directory, filename)
-
-    # Create directory if it doesn't exist
-    FileUtils.mkdir_p(@server.saves_directory) unless Dir.exist?(@server.saves_directory)
-
-    # Write file
-    File.binwrite(file_path, uploaded_file.read)
+    @server.host_driver.write_save(@server, uploaded_file.original_filename, uploaded_file)
 
     redirect_to factorio_server_save_files_path(@server), notice: "Save file uploaded successfully"
   end
 
   def show
-    filename = params[:filename]
-    file_path = File.join(@server.saves_directory, filename)
+    path = @server.host_driver.save_path_for_download(@server, params[:filename])
 
-    if File.exist?(file_path)
-      send_file file_path, disposition: "attachment"
+    if path
+      send_file path, disposition: "attachment"
     else
       redirect_to factorio_server_save_files_path(@server), alert: "Save file not found"
     end
@@ -46,14 +37,10 @@ class SaveFilesController < ApplicationController
 
   def destroy
     filename = params[:filename]
-    file_path = File.join(@server.saves_directory, filename)
 
-    if File.exist?(file_path)
+    if @server.host_driver.delete_save(@server, filename)
       # If the file being deleted is the current save file, clear the save_file attribute
-      if @server.save_file == filename
-        @server.update(save_file: nil)
-      end
-      File.delete(file_path)
+      @server.update(save_file: nil) if @server.save_file == filename
       redirect_to factorio_server_save_files_path(@server), notice: "Save file deleted successfully"
     else
       redirect_to factorio_server_save_files_path(@server), alert: "Save file not found"
@@ -73,16 +60,6 @@ class SaveFilesController < ApplicationController
 
   def set_server
     @server = current_user.factorio_servers.find(params[:factorio_server_id])
-  end
-
-  def list_save_files
-    Dir.glob(File.join(@server.saves_directory, "*.zip")).map do |file|
-      {
-        name: File.basename(file),
-        size: File.size(file),
-        modified: File.mtime(file)
-      }
-    end.sort_by { |file| file[:modified] }.reverse
   end
 
   def ensure_server_not_running

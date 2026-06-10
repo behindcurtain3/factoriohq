@@ -20,15 +20,22 @@ class ModsController < ApplicationController
     @mod = FactorioApi::Client.get_mod(params[:mod][:name])
     release = @mod.releases.find { |release| release.version == params[:mod][:version] }
     filename = @mod.name + "_" + release.version + ".zip"
-    output_path = File.join(@server.mods_directory, filename)
 
-    download_result = FactorioApi::Client.download_mod(release.download_url, current_user.factorio_username, current_user.factorio_token, output_path)
+    # Download to a tempfile so a failed checksum never reaches the mods
+    # directory.
+    Tempfile.create([ @mod.name, ".zip" ]) do |tempfile|
+      download_result = FactorioApi::Client.download_mod(release.download_url, current_user.factorio_username, current_user.factorio_token, tempfile.path)
 
-    if download_result[:success]
-      sha1 = download_result[:sha1]
-      if sha1 != release.sha1
-        redirect_to factorio_server_path(@server), alert: "SHA1 mismatch. Mod not added."
-        return
+      if download_result[:success]
+        sha1 = download_result[:sha1]
+        if sha1 != release.sha1
+          redirect_to factorio_server_path(@server), alert: "SHA1 mismatch. Mod not added."
+          return
+        end
+      end
+
+      File.open(tempfile.path, "rb") do |file|
+        @server.host_driver.write_mod(@server, filename, file)
       end
     end
 

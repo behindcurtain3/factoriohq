@@ -41,12 +41,7 @@ class ServerModsController < ApplicationController
       return
     end
 
-    # Create directory if it doesn't exist
-    FileUtils.mkdir_p(@server.mods_directory) unless Dir.exist?(@server.mods_directory)
-
-    # Save file to server's mods directory
-    file_path = File.join(@server.mods_directory, filename)
-    File.binwrite(file_path, uploaded_file.read)
+    @server.host_driver.write_mod(@server, filename, uploaded_file)
 
     server_mod = Mod.new(
       name: mod_name,
