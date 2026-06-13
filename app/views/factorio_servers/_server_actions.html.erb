@@ -1,51 +1,57 @@
 <div class="d-flex flex-wrap gap-2 align-items-center" id="server-actions">
-  <% if server.running? %>
-    <%= button_to stop_factorio_server_path(server),
-                 class: "btn btn-danger",
-                 data: { turbo: true },
-                 disabled: server.status == 'stopping' do %>
-      <% if server.status == 'stopping' %>
-        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-      <% else %>
-        <i class="bi bi-stop-fill"></i>
-      <% end %>
-      Stop Server
-    <% end %>
-  <% else %>
-    <%= button_to start_factorio_server_path(server),
-                 class: "btn btn-success",
-                 data: { turbo: true },
-                 disabled: server.status == 'starting' || !server.host_ready? do %>
-      <% if server.status == 'starting' %>
-        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-      <% else %>
-        <i class="bi bi-play-fill"></i>
-      <% end %>
-      Start Server
-    <% end %>
-    <% if !server.host_ready? && (host_message = server.host_status_message).present? %>
-      <span class="text-muted small"><%= host_message %></span>
-    <% end %>
+  <% unless server.host_ready? %>
+    <div class="alert alert-warning mb-0 w-100">
+      <i class="bi bi-exclamation-diamond"></i>
+      <%= server.host_status_message.presence || "The server host is not ready yet." %>
+    </div>
   <% end %>
 
-  <% if server.stopped? %>
-    <%= link_to factorio_server_server_mods_path(@server), class: 'btn btn-info' do %>
-      <i class="bi bi-puzzle"></i> Manage Mods
+  <% if server.host_ready? %>
+    <% if server.running? %>
+      <%= button_to stop_factorio_server_path(server),
+                   class: "btn btn-danger",
+                   data: { turbo: true },
+                   disabled: server.status == 'stopping' do %>
+        <% if server.status == 'stopping' %>
+          <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        <% else %>
+          <i class="bi bi-stop-fill"></i>
+        <% end %>
+        Stop Server
+      <% end %>
+    <% else %>
+      <%= button_to start_factorio_server_path(server),
+                   class: "btn btn-success",
+                   data: { turbo: true },
+                   disabled: server.status == 'starting' do %>
+        <% if server.status == 'starting' %>
+          <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        <% else %>
+          <i class="bi bi-play-fill"></i>
+        <% end %>
+        Start Server
+      <% end %>
     <% end %>
-    <%= link_to factorio_server_save_files_path(@server), class: 'btn btn-info' do %>
-      <i class="bi bi-archive"></i> Manage Saves
-    <% end %>
-    <%= link_to edit_factorio_server_path(@server), class: "btn btn-warning" do %>
-      <i class="bi bi-pencil-square"></i> Edit Settings
-    <% end %>
-    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#versionModal">
-      <i class="bi bi-box-seam"></i> Change Version
-    </button>
-  <% end %>
 
-  <% if server.version == 'latest' || server.version.blank? %>
-    <%= link_to check_updates_factorio_server_path(server), class: "btn btn-info" do %>
-      <i class="bi bi-cloud-arrow-down"></i> Check for Updates
+    <% if server.stopped? %>
+      <%= link_to factorio_server_server_mods_path(@server), class: 'btn btn-info' do %>
+        <i class="bi bi-puzzle"></i> Manage Mods
+      <% end %>
+      <%= link_to factorio_server_save_files_path(@server), class: 'btn btn-info' do %>
+        <i class="bi bi-archive"></i> Manage Saves
+      <% end %>
+      <%= link_to edit_factorio_server_path(@server), class: "btn btn-warning" do %>
+        <i class="bi bi-pencil-square"></i> Edit Settings
+      <% end %>
+      <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#versionModal">
+        <i class="bi bi-box-seam"></i> Change Version
+      </button>
+    <% end %>
+
+    <% if server.version == 'latest' || server.version.blank? %>
+      <%= link_to check_updates_factorio_server_path(server), class: "btn btn-info" do %>
+        <i class="bi bi-cloud-arrow-down"></i> Check for Updates
+      <% end %>
     <% end %>
   <% end %>
 
