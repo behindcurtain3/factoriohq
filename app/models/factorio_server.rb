@@ -102,6 +102,7 @@ class FactorioServer < ApplicationRecord
 
   def start
     return false if running?
+    return false unless host_ready?
 
     update(status: "starting")
     ServerOperationJob.perform_later(self, "start")
@@ -141,6 +142,16 @@ class FactorioServer < ApplicationRecord
 
   def container_exists?
     host_driver.container_exists?(self)
+  end
+
+  # Whether the host is ready to run this server (a remote host may still be
+  # provisioning).
+  def host_ready?
+    host_driver.host_ready?(self)
+  end
+
+  def host_status_message
+    host_driver.host_status_message(self)
   end
 
   def container_name

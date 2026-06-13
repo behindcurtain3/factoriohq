@@ -188,6 +188,18 @@ module Hosting
       nil
     end
 
+    # Whether the host can run the server now. The local host is always
+    # available; remote hosts may still be provisioning.
+    def host_ready?(_server)
+      true
+    end
+
+    # A note explaining the host's readiness (e.g. why Start is disabled), or
+    # nil when there is nothing to say.
+    def host_status_message(_server)
+      nil
+    end
+
     private
 
     def pull_image(image)

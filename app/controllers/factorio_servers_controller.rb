@@ -44,6 +44,11 @@ class FactorioServersController < ApplicationController
   def start
     @server = current_user.factorio_servers.find(params[:id])
 
+    unless @server.host_ready?
+      redirect_to @server, alert: @server.host_status_message.presence || "The server host is not ready yet."
+      return
+    end
+
     if @server.start
       respond_to do |format|
         format.html { redirect_to @server }

@@ -15,13 +15,16 @@
     <%= button_to start_factorio_server_path(server),
                  class: "btn btn-success",
                  data: { turbo: true },
-                 disabled: server.status == 'starting' do %>
+                 disabled: server.status == 'starting' || !server.host_ready? do %>
       <% if server.status == 'starting' %>
         <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
       <% else %>
         <i class="bi bi-play-fill"></i>
       <% end %>
       Start Server
+    <% end %>
+    <% if !server.host_ready? && (host_message = server.host_status_message).present? %>
+      <span class="text-muted small"><%= host_message %></span>
     <% end %>
   <% end %>
 

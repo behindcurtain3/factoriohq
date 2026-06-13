@@ -43,6 +43,19 @@ class FactorioServerTest < ActiveSupport::TestCase
     assert factorio_servers(:two).running?
   end
 
+  test "the local host is always ready with no status message" do
+    assert @server.host_ready?
+    assert_nil @server.host_status_message
+  end
+
+  test "start is refused when the host is not ready" do
+    stub_method(@server, :host_ready?, false) do
+      assert_not @server.start
+    end
+
+    assert @server.reload.stopped?
+  end
+
   # --- Docker namespacing (production stays legacy; other envs are prefixed) ---
 
   test "container name is unprefixed in production" do
