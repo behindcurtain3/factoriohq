@@ -1,0 +1,53 @@
+<section class="fctr-hero text-center">
+  <div class="fctr-hero-brand">
+    <i class="bi bi-gear-fill fctr-hero-gear"></i>
+    <h1 class="fctr-hero-title">FactorioHQ</h1>
+  </div>
+  <p class="fctr-hero-tagline">
+    Create, configure, and control your Factorio servers from one clean dashboard &mdash;
+    start and stop with a click, manage mods and saves.
+  </p>
+  <div class="d-flex gap-2 justify-content-center flex-wrap">
+    <% if registrations_enabled? %>
+      <%= link_to "Get started", new_user_registration_path, class: "btn btn-success btn-lg" %>
+    <% end %>
+    <%= link_to "Log in", new_user_session_path, class: "btn btn-outline-secondary btn-lg" %>
+  </div>
+</section>
+
+<%= render_hook "landing" %>
+
+<section class="row g-4 my-5">
+  <div class="col-md-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-play-circle text-success me-1"></i> One-click control</h5>
+        <p class="card-text text-muted mb-0">Start, stop, and update servers without touching a terminal.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-puzzle text-info me-1"></i> Mods &amp; saves</h5>
+        <p class="card-text text-muted mb-0">Upload save files, manage the mod list, and pick a version per server.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-terminal text-warning me-1"></i> RCON console</h5>
+        <p class="card-text text-muted mb-0">Send commands to a running game straight from the browser.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-card-list text-primary me-1"></i> Live logs</h5>
+        <p class="card-text text-muted mb-0">Follow server and in-game activity in real time as it happens.</p>
+      </div>
+    </div>
+  </div>
+</section>

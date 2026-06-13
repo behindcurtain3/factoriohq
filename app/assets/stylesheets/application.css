@@ -636,3 +636,35 @@ pre {
   height: 30px;
   padding: 0.2rem 0.5rem;
 }
+
+/* ---------- Landing hero ---------- */
+.fctr-hero {
+  padding: 4rem 1rem 2rem;
+}
+.fctr-hero-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.fctr-hero-gear {
+  color: #ff8a17;
+  font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+  filter: drop-shadow(0 0 10px rgba(255, 138, 23, .4));
+  animation: fctr-spin 9s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) { .fctr-hero-gear { animation: none; } }
+.fctr-hero-title {
+  font-weight: 900;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  margin: 0;
+  text-shadow: 0 0 18px rgba(255, 138, 23, .35), 0 2px 0 rgba(0, 0, 0, .6);
+}
+.fctr-hero-title::after { display: none; }
+.fctr-hero-tagline {
+  max-width: 42rem;
+  margin: 0 auto 1.75rem;
+  font-size: 1.15rem;
+  color: var(--bs-secondary-color);
+}

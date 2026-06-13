@@ -9,6 +9,10 @@ module ApplicationHelper
     render(partial, **locals)
   end
 
+  def registrations_enabled?
+    SiteSetting.get("registrations_enabled", "true") == "true"
+  end
+
   def markdown(text)
     return "" if text.blank?
 

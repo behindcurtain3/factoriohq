@@ -39,5 +39,5 @@ Rails.application.routes.draw do
     patch "site_settings", to: "site_settings#update"
   end
 
-  root to: "factorio_servers#index"
+  root to: "pages#home"
 end
