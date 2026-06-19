@@ -270,38 +270,54 @@ class FactorioServer < ApplicationRecord
     "#{self.class.image_repository}:#{tag}"
   end
 
+  # A custom registry can't be enumerated through the Docker Hub API, so a
+  # versions.json URL can be configured (e.g. the one our factorio-image repo
+  # publishes) to populate the dropdown for it.
+  def self.versions_url
+    SiteSetting.get("factorio_versions_url").presence
+  end
+
   def self.available_versions
     # Cache the versions for 1 hour, keyed by repository so changing it refetches.
     Rails.cache.fetch("factorio_versions/#{image_repository}", expires_in: 1.hour) do
-      repo = docker_hub_repository
-      # Custom registries can't be enumerated through the Docker Hub API.
-      next [ "latest" ] unless repo
-
-      begin
-        # Fetch tags from Docker Hub API
-        uri = URI("https://hub.docker.com/v2/repositories/#{repo}/tags?page_size=100")
-        response = Net::HTTP.get(uri)
-        data = JSON.parse(response)
-
-        # Extract and sort versions
-        versions = data["results"].map { |tag| tag["name"] }
-
-        # Filter out non-version tags and sort properly
-        version_regex = /^(\d+\.\d+\.\d+)$/
-        version_tags = versions.select { |v| v.match(version_regex) || v == "latest" }
-
-        # Put 'latest' at the top, then sort versions in descending order
-        [ "latest" ] + version_tags.reject { |v| v == "latest" }.sort_by do |v|
-          v.split(".").map(&:to_i)
-        end.reverse
-      rescue => e
-        # Fallback to a minimal list if the API call fails
-        Rails.logger.error "Failed to fetch Factorio versions for #{repo}: #{e.message}"
-        [
-          "latest"
-        ]
+      if docker_hub_repository
+        docker_hub_versions(docker_hub_repository)
+      elsif versions_url
+        published_versions(versions_url)
+      else
+        [ "latest" ]
       end
     end
+  end
+
+  def self.docker_hub_versions(repo)
+    uri = URI("https://hub.docker.com/v2/repositories/#{repo}/tags?page_size=100")
+    data = JSON.parse(Net::HTTP.get(uri))
+
+    version_regex = /^(\d+\.\d+\.\d+)$/
+    version_tags = data["results"].map { |tag| tag["name"] }
+                       .select { |v| v.match(version_regex) || v == "latest" }
+
+    # 'latest' first, then concrete versions newest-first.
+    [ "latest" ] + version_tags.reject { |v| v == "latest" }
+                       .sort_by { |v| v.split(".").map(&:to_i) }.reverse
+  rescue => e
+    Rails.logger.error "Failed to fetch Factorio versions for #{repo}: #{e.message}"
+    [ "latest" ]
+  end
+
+  # Reads a versions.json of the form { "latest":, "stable":, "versions":[...] }.
+  # The movable tags come first so they're the obvious choices, then the
+  # concrete versions the file lists.
+  def self.published_versions(url)
+    data = JSON.parse(Net::HTTP.get(URI(url)))
+
+    tags = [ "latest" ]
+    tags << "stable" if data["stable"].present?
+    (tags + Array(data["versions"])).uniq
+  rescue => e
+    Rails.logger.error "Failed to fetch Factorio versions from #{url}: #{e.message}"
+    [ "latest" ]
   end
 
   def check_for_updates

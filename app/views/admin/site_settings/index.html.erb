@@ -41,8 +41,18 @@
           <code><%= FactorioServer::DEFAULT_IMAGE_REPOSITORY %></code>: it must accept the same
           environment variables (RCON_PASSWORD, PORT, RCON_PORT, SAVE_NAME, DLC_SPACE_AGE, &hellip;),
           mount its data at <code>/factorio</code>, and use the same version tag scheme.
-          The version list can only be auto-populated for Docker Hub repositories; for other
-          registries you'll set the version manually.
+        </div>
+      </div>
+      <div class="mb-3">
+        <%= f.label :factorio_versions_url, "Versions JSON URL", class: "form-label" %>
+        <%= f.url_field :factorio_versions_url, value: @factorio_versions_url,
+              class: "form-control", placeholder: "https://raw.githubusercontent.com/owner/factorio-image/main/versions.json",
+              spellcheck: false, autocapitalize: "off", autocomplete: "off" %>
+        <div class="form-text">
+          Optional. The version list auto-populates for Docker Hub repositories; for a custom
+          registry (e.g. <code>ghcr.io/&hellip;</code>) point this at a JSON document of the form
+          <code>{ "latest":, "stable":, "versions": [&hellip;] }</code> to fill the version dropdown.
+          Leave blank to set versions manually.
         </div>
       </div>
       <%= f.submit "Save Settings", class: "btn btn-primary" %>

@@ -102,6 +102,29 @@ class FactorioServerTest < ActiveSupport::TestCase
     assert_nil FactorioServer.docker_hub_repository
   end
 
+  test "available_versions reads a configured versions.json for a custom registry" do
+    Rails.cache.clear
+    SiteSetting.set("factorio_image_repository", "ghcr.io/owner/factorio")
+    SiteSetting.set("factorio_versions_url", "https://example.com/versions.json")
+    json = { latest: "2.0.77", stable: "2.0.76", versions: [ "2.0.77", "2.0.76" ] }.to_json
+
+    stub_method(Net::HTTP, :get, ->(*) { json }) do
+      assert_equal [ "latest", "stable", "2.0.77", "2.0.76" ], FactorioServer.available_versions
+    end
+  end
+
+  test "available_versions omits stable and falls back when the versions url is absent or broken" do
+    Rails.cache.clear
+    SiteSetting.set("factorio_image_repository", "ghcr.io/owner/factorio")
+    assert_equal [ "latest" ], FactorioServer.available_versions
+
+    Rails.cache.clear
+    SiteSetting.set("factorio_versions_url", "https://example.com/versions.json")
+    stub_method(Net::HTTP, :get, ->(*) { raise "boom" }) do
+      assert_equal [ "latest" ], FactorioServer.available_versions
+    end
+  end
+
   # --- Server admins ---
 
   test "admin_list parses usernames separated by commas, spaces, or newlines" do
